@@ -1,0 +1,22 @@
+apiVersion: kagent.dev/v1alpha3
+kind: AgentTemplate
+metadata:
+  name: my-agent
+  namespace: kagent
+  labels:
+    kagent.dev/harness: my-agent
+spec:
+  modelConfig:
+    name: default-model-config
+  description: Describe your agent's behavior.
+  systemPrompt: |
+    Your system prompt here.
+  skills:
+    - name: my-skill
+      source:
+        oci: "ghcr.io/your-org/my-skills@sha256:REPLACE_WITH_DIGEST"
+  tools:
+    - mcp:
+        server:
+          kind: RemoteMCPServer
+          name: my-mcp

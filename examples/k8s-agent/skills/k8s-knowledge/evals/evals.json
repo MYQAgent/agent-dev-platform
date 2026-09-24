@@ -1,0 +1,30 @@
+{
+  "evals": [
+    {
+      "id": "k8s-knowledge-001",
+      "prompt": "生成一个名为 web 的 Deployment，3 个副本，使用 nginx:1.25 镜像。",
+      "expectations": [
+        "包含 apiVersion: apps/v1",
+        "kind 为 Deployment",
+        "replicas 为 3",
+        "镜像为 nginx:1.25"
+      ]
+    },
+    {
+      "id": "k8s-knowledge-002",
+      "prompt": "无状态 Web 应用应该用哪种资源？有状态数据库又该用哪种？",
+      "expectations": [
+        "无状态应用用 Deployment",
+        "有状态数据库用 StatefulSet"
+      ]
+    },
+    {
+      "id": "k8s-knowledge-003",
+      "prompt": "列出 DaemonSet 和 CronJob 的 apiVersion。",
+      "expectations": [
+        "DaemonSet 的 apiVersion 是 apps/v1",
+        "CronJob 的 apiVersion 是 batch/v1"
+      ]
+    }
+  ]
+}

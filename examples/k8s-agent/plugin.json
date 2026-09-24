@@ -1,0 +1,10 @@
+{
+  "name": "k8s-skills",
+  "version": "0.1.0",
+  "description": "Kubernetes skills for the k8s-agent: knowledge, troubleshooting, and security auditing.",
+  "skills": [
+    "./skills/k8s-knowledge",
+    "./skills/k8s-troubleshoot",
+    "./skills/k8s-security"
+  ]
+}

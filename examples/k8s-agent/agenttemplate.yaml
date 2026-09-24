@@ -1,0 +1,31 @@
+apiVersion: kagent.dev/v1alpha3
+kind: AgentTemplate
+metadata:
+  name: k8s-agent
+  namespace: kagent
+  labels:
+    kagent.dev/harness: k8s-agent
+spec:
+  modelConfig:
+    name: default-model-config
+  description: Kubernetes engineering agent with knowledge, troubleshooting, and security skills.
+  systemPrompt: |
+    You are a Kubernetes engineering assistant. Route requests to the appropriate skill:
+    - Kubernetes concepts and YAML generation -> k8s-knowledge
+    - Cluster troubleshooting and debugging -> k8s-troubleshoot
+    - Security auditing and hardening -> k8s-security
+  skills:
+    - name: k8s-knowledge
+      source:
+        oci: "ghcr.io/example/k8s-skills@sha256:REPLACE_WITH_DIGEST"
+    - name: k8s-troubleshoot
+      source:
+        oci: "ghcr.io/example/k8s-skills@sha256:REPLACE_WITH_DIGEST"
+    - name: k8s-security
+      source:
+        oci: "ghcr.io/example/k8s-skills@sha256:REPLACE_WITH_DIGEST"
+  tools:
+    - mcp:
+        server:
+          kind: RemoteMCPServer
+          name: k8s-mcp

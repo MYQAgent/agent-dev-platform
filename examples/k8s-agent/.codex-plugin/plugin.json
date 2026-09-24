@@ -1,0 +1,12 @@
+{
+  "name": "k8s-skills",
+  "description": "Kubernetes skills for knowledge, troubleshooting, and security.",
+  "version": "0.1.0",
+  "author": {
+    "name": "myqagent-dev-platform",
+    "email": "platform@example.org"
+  },
+  "repository": "https://github.com/example/k8s-agent",
+  "license": "Apache-2.0",
+  "skills": "./skills/"
+}

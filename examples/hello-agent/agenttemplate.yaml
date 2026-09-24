@@ -1,0 +1,37 @@
+# hello-agent 示例
+
+最小可运行的 kagent agent。仅含一个 `AgentTemplate`（内嵌 systemPrompt），无 skill / MCP / plugin。
+
+> The smallest runnable kagent agent.
+
+---
+
+## 文件 File
+
+```yaml
+# agenttemplate.yaml
+apiVersion: kagent.dev/v1alpha3
+kind: AgentTemplate
+metadata:
+  name: hello-agent
+  namespace: kagent
+  labels:
+    kagent.dev/harness: kagent
+spec:
+  modelConfig:
+    name: default-model-config
+  description: A minimal hello-world agent.
+  systemPrompt: |
+    You are a friendly assistant. Greet the user and answer briefly.
+```
+
+## 运行 Run
+
+前提：已有 Harness（见 [docs/01-basics/04-run-agent.md](../../docs/01-basics/04-run-agent.md)）。
+
+```bash
+kubectl apply -f agenttemplate.yaml
+kubectl get agenttemplate -n kagent hello-agent
+```
+
+当 status 出现 `Ready=True` 后，即可通过 UI 或 A2A 与之对话。
