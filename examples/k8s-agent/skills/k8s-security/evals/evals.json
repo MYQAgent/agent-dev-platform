@@ -1,0 +1,21 @@
+{
+  "evals": [
+    {
+      "id": "k8s-security-001",
+      "prompt": "审计一个以 root 运行且未设置资源限制的容器，给出报告。",
+      "expectations": [
+        "将 root 运行标记为 High",
+        "建议设置 runAsNonRoot: true",
+        "建议添加资源限制"
+      ]
+    },
+    {
+      "id": "k8s-security-002",
+      "prompt": "使用 extensions/v1beta1 的 Deployment 有什么风险？",
+      "expectations": [
+        "指出这是 deprecated API",
+        "建议迁移到 apps/v1"
+      ]
+    }
+  ]
+}

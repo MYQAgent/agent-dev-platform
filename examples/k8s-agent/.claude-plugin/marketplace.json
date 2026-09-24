@@ -1,0 +1,24 @@
+{
+  "name": "k8s-skills",
+  "owner": {
+    "name": "myqagent-dev-platform",
+    "email": "platform@example.org"
+  },
+  "metadata": {
+    "description": "Kubernetes skills for knowledge, troubleshooting, and security.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "k8s-skills",
+      "description": "Collection of Kubernetes engineering skills.",
+      "source": "./",
+      "category": "Development",
+      "skills": [
+        "./skills/k8s-knowledge",
+        "./skills/k8s-troubleshoot",
+        "./skills/k8s-security"
+      ]
+    }
+  ]
+}

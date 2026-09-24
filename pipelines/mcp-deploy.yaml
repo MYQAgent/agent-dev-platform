@@ -1,0 +1,30 @@
+name: mcp-deploy
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'mcp/**'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kmcp
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/kagent-dev/kmcp/refs/heads/main/scripts/get-kmcp.sh | bash
+
+      - name: Build MCP server image
+        run: |
+          kmcp build ./mcp --image "ghcr.io/${{ github.repository }}/mcp:latest"
+
+      - name: Deploy MCP server
+        run: |
+          kmcp deploy ./mcp

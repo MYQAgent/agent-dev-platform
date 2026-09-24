@@ -1,0 +1,26 @@
+{
+  "evals": [
+    {
+      "id": "k8s-troubleshoot-001",
+      "prompt": "我的 Pod 状态是 ImagePullBackOff，应该怎么排查？",
+      "expectations": [
+        "提到检查镜像是否存在",
+        "提到检查拉取凭证"
+      ]
+    },
+    {
+      "id": "k8s-troubleshoot-002",
+      "prompt": "排查 CrashLoopBackOff 时应该查哪些日志？",
+      "expectations": [
+        "提到使用 --previous 参数查上一次崩溃日志"
+      ]
+    },
+    {
+      "id": "k8s-troubleshoot-003",
+      "prompt": "Service 不可达的常见原因是什么？",
+      "expectations": [
+        "提到 Service selector 与 Pod 标签不匹配"
+      ]
+    }
+  ]
+}

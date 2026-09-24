@@ -1,0 +1,13 @@
+apiVersion: kagent.dev/v1alpha3
+kind: AgentTemplate
+metadata:
+  name: team-a-agent
+  namespace: team-a
+  labels:
+    kagent.dev/harness: team-a
+spec:
+  modelConfig:
+    name: team-a-model
+  description: Team A's agent.
+  systemPrompt: |
+    You are team A's assistant.

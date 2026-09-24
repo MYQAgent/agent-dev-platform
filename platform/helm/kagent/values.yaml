@@ -1,0 +1,25 @@
+# kagent controller Helm values
+# 引用上游 oci://ghcr.io/kagent-dev/kagent/helm/kagent，此处为定制覆盖。
+
+# 启用 Substrate（指向 ate-system）
+controller:
+  substrate:
+    enabled: true
+    ateApiEndpoint: dns:///api.ate-system.svc:443
+    atenetRouterURL: http://atenet-router.ate-system.svc:80
+    defaultWorkerPool:
+      name: kagent-default
+
+substrateWorkerPool:
+  create: true
+  replicas: 8
+  workerImage: ghcr.io/kagent-dev/substrate/ateom-gvisor:v0.2.0-beta5
+
+# 默认模型配置
+defaultModelConfig:
+  provider: openAI
+
+# PostgreSQL 由 chart 自动部署；如需 pgvector 见 DEVELOPMENT.md
+database:
+  postgres:
+    vectorEnabled: false

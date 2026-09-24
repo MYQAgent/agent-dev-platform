@@ -1,0 +1,8 @@
+{
+  "name": "my-skills",
+  "version": "0.1.0",
+  "description": "Description of the skill bundle.",
+  "skills": [
+    "./skills/my-skill"
+  ]
+}

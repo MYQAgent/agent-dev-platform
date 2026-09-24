@@ -1,0 +1,8 @@
+apiVersion: kagent.dev/v1alpha3
+kind: RemoteMCPServer
+metadata:
+  name: k8s-mcp
+  namespace: kagent
+spec:
+  transport: streamable-http
+  url: http://k8s-mcp.kagent.svc:8080/mcp

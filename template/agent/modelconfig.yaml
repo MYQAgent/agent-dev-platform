@@ -1,0 +1,12 @@
+apiVersion: kagent.dev/v1alpha3
+kind: ModelConfig
+metadata:
+  name: default-model-config
+  namespace: kagent
+spec:
+  provider: openAI
+  model: gpt-4o
+  apiKey:
+    secretRef:
+      name: openai-credentials
+      key: apiKey

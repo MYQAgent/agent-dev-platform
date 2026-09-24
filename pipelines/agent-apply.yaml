@@ -1,0 +1,32 @@
+name: agent-apply
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry-run only (preview manifests)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        run: |
+          # Set up kubeconfig from secrets
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > ~/.kube/config
+
+      - name: Apply manifests
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            kubectl apply --dry-run=client -f harness.yaml -f modelconfig.yaml -f remotemcpserver.yaml -f agenttemplate.yaml
+          else
+            kubectl apply -f harness.yaml -f modelconfig.yaml -f remotemcpserver.yaml -f agenttemplate.yaml
+          fi

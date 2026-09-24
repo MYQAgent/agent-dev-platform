@@ -1,0 +1,16 @@
+# kmcp controller Helm values
+# 引用上游 kmcp chart，此处为定制覆盖。
+
+# 命名空间范围
+namespace: kmcp-system
+
+# 默认 MCP server 镜像
+mcpServer:
+  defaultImage: ghcr.io/kagent-dev/kmcp/mcp-server:latest
+
+# 传输协议
+transport:
+  http:
+    enabled: true
+  sse:
+    enabled: false
