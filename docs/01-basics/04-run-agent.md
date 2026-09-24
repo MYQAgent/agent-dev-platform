@@ -11,8 +11,14 @@
 make create-kind-cluster
 
 # 2. 设模型 provider 与 key
-export KAGENT_DEFAULT_MODEL_PROVIDER=openAI
-export OPENAI_API_KEY=your-openai-api-key
+## 方案 A：OpenAI
+export KAGENT_DEFAULT_MODEL_PROVIDER=OpenAI
+export OPENAI_API_KEY=sk-your-openai-api-key
+
+## 方案 B：DeepSeek（国内直连）
+export KAGENT_DEFAULT_MODEL_PROVIDER=OpenAI
+export DEEPSEEK_API_KEY=sk-your-deepseek-api-key
+# 注意：需在 ModelConfig 中设置 openAI.baseUrl=https://api.deepseek.com/v1
 
 # 3. Helm 安装（controller + UI + PostgreSQL 自动部署）
 make helm-install

@@ -4,9 +4,25 @@ metadata:
   name: default-model-config
   namespace: kagent
 spec:
-  provider: openAI
+  provider: OpenAI
   model: gpt-4o
-  apiKey:
-    secretRef:
-      name: openai-credentials
-      key: apiKey
+  apiKeySecret: openai-credentials
+  apiKeySecretKey: apiKey
+---
+# DeepSeek 示例（国内可直连，兼容 OpenAI API）
+# 使用前需创建 Secret：
+#   kubectl create secret generic deepseek-credentials \
+#     --namespace kagent \
+#     --from-literal=apiKey=sk-your-deepseek-api-key
+apiVersion: kagent.dev/v1alpha3
+kind: ModelConfig
+metadata:
+  name: deepseek-model-config
+  namespace: kagent
+spec:
+  provider: OpenAI
+  model: deepseek-chat
+  openAI:
+    baseUrl: https://api.deepseek.com/v1
+  apiKeySecret: deepseek-credentials
+  apiKeySecretKey: apiKey
