@@ -8,6 +8,7 @@ PORT              ?= 3080
 KIND_CLUSTER_NAME ?= kagent
 KIND_NODE_IMAGE   ?= kindest/node:v1.32.2
 KIND_NODE_NAME    ?= $(KIND_CLUSTER_NAME)-control-plane
+KIND_API_PORT     ?= 8443
 HELM_NAMESPACE    ?= kagent
 KAGENT_VERSION    ?= 1.0.0-alpha3
 
@@ -41,7 +42,7 @@ create-kind-cluster: ## 用 docker run 创建 Kind 集群（纯 Docker 方式）
 			--name $(KIND_NODE_NAME) \
 			--privileged \
 			--restart=on-failure:3 \
-			-p 127.0.0.1:6443:6443 \
+			-p 127.0.0.1:$(KIND_API_PORT):6443 \
 			$(KIND_NODE_IMAGE); \
 		echo "等待容器就绪..."; \
 		sleep 8; \
@@ -61,7 +62,7 @@ create-kind-cluster: ## 用 docker run 创建 Kind 集群（纯 Docker 方式）
 		echo "=== 提取 kubeconfig ==="; \
 		mkdir -p $(HOME)/.kube; \
 		docker exec $(KIND_NODE_NAME) cat /etc/kubernetes/admin.conf > $(HOME)/.kube/$(KIND_CLUSTER_NAME).config; \
-		sed "s|server: https://.*:6443|server: https://127.0.0.1:6443|g" $(HOME)/.kube/$(KIND_CLUSTER_NAME).config > $(HOME)/.kube/config; \
+		sed "s|server: https://.*:6443|server: https://127.0.0.1:$(KIND_API_PORT)|g" $(HOME)/.kube/$(KIND_CLUSTER_NAME).config > $(HOME)/.kube/config; \
 		echo "=== 集群就绪 ==="; \
 		kubectl cluster-info; \
 	fi
