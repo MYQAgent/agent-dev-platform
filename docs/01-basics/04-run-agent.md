@@ -7,8 +7,11 @@
 ## 核心命令 Core commands
 
 ```bash
-# 1. 建 Kind 集群
+# 1. 建 Kind 集群（默认名称 kagent）
 make create-kind-cluster
+
+#    自定义集群名称（影响容器名、kubeconfig、context）
+make create-kind-cluster KIND_CLUSTER_NAME=my-cluster
 
 # 2. 设模型 provider 与 key
 ## 方案 A：OpenAI
