@@ -35,9 +35,17 @@ docs-github: ## 提示：推送到 GitHub 后原生渲染
 
 create-kind-cluster: ## 用 docker run 创建 Kind 集群（纯 Docker 方式）
 	@echo "=== 创建 Kind 集群: $(KIND_CLUSTER_NAME) ==="; \
-	if docker ps --format '{{.Names}}' | grep -q '^$(KIND_NODE_NAME)$$'; then \
-		echo "集群容器 $(KIND_NODE_NAME) 已存在，跳过创建"; \
+	CONTAINER_EXISTS=$$(docker ps -a --format '{{.Names}}' | grep -q '^$(KIND_NODE_NAME)$$' && echo 1 || echo 0); \
+	CONTAINER_RUNNING=$$(docker ps --format '{{.Names}}' | grep -q '^$(KIND_NODE_NAME)$$' && echo 1 || echo 0); \
+	if [ "$$CONTAINER_RUNNING" = "1" ]; then \
+		echo "集群容器 $(KIND_NODE_NAME) 已在运行，跳过创建"; \
 	else \
+		if [ "$$CONTAINER_EXISTS" = "1" ]; then \
+			echo "清理残留容器 $(KIND_NODE_NAME)..."; \
+			docker rm -f $(KIND_NODE_NAME) > /dev/null 2>&1; \
+			rm -f $(HOME)/.kube/$(KIND_CLUSTER_NAME).config; \
+			echo "已清理，开始重新创建"; \
+		fi; \
 		docker run -d \
 			--name $(KIND_NODE_NAME) \
 			--privileged \
