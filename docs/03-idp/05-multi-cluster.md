@@ -24,19 +24,22 @@ make create-kind-cluster KIND_CLUSTER_NAME=my-cluster
 |------|---------------------------|-------------------------------|
 | 容器名 | `kagent-control-plane` | `my-cluster-control-plane` |
 | kubeconfig 文件 | `~/.kube/kagent.config` | `~/.kube/my-cluster.config` |
-| kubeconfig context | `kubernetes-admin@kagent` | `kubernetes-admin@my-cluster` |
+| kubeconfig context | 由 kubeadm 自动生成（如 `kubernetes-admin@kubernetes`） | 同上 |
 
 ### 创建后验证
 
+集群创建完成后，终端会输出动态提取的 context 名称（如 `kubernetes-admin@kubernetes`）：
+
 ```bash
-# 查看 context
+# 查看当前 context
 kubectl config current-context
 
 # 查看节点
 kubectl get nodes -o wide
 
-# 查询指定集群
-kubectl get nodes --context kubernetes-admin@my-cluster
+# 查询指定集群（context 名以 Makefile 实际输出为准）
+kubectl config get-contexts                                # 列出所有 context
+kubectl get nodes --context <上一步查到的 context 名>
 kubectl --kubeconfig ~/.kube/my-cluster.config get pods -n kube-system
 ```
 

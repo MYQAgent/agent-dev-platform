@@ -61,8 +61,20 @@ create-kind-cluster: ## 用 docker run 创建 Kind 集群（纯 Docker 方式）
 			apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml; \
 		echo "=== 提取 kubeconfig ==="; \
 		mkdir -p $(HOME)/.kube; \
-		docker exec $(KIND_NODE_NAME) cat /etc/kubernetes/admin.conf > $(HOME)/.kube/$(KIND_CLUSTER_NAME).config; \
-		sed "s|server: https://.*:6443|server: https://127.0.0.1:$(KIND_API_PORT)|g" $(HOME)/.kube/$(KIND_CLUSTER_NAME).config > $(HOME)/.kube/config; \
+		docker exec $(KIND_NODE_NAME) cat /etc/kubernetes/admin.conf > $(HOME)/.kube/$(KIND_CLUSTER_NAME).raw; \
+		CTX_NAME=$$(grep 'current-context:' $(HOME)/.kube/$(KIND_CLUSTER_NAME).raw | awk '{print $$2}'); \
+		echo "context 名称: $$CTX_NAME"; \
+		sed "s|server: https://.*:6443|server: https://127.0.0.1:$(KIND_API_PORT)|g" \
+			$(HOME)/.kube/$(KIND_CLUSTER_NAME).raw > $(HOME)/.kube/$(KIND_CLUSTER_NAME).config; \
+		rm -f $(HOME)/.kube/$(KIND_CLUSTER_NAME).raw; \
+		if [ -f $(HOME)/.kube/config ]; then \
+			echo "=== 合并 kubeconfig（保留已有 context） ==="; \
+			KUBECONFIG=$(HOME)/.kube/config:$(HOME)/.kube/$(KIND_CLUSTER_NAME).config \
+			kubectl config view --flatten > $(HOME)/.kube/config.new && \
+			mv $(HOME)/.kube/config.new $(HOME)/.kube/config; \
+		else \
+			cp $(HOME)/.kube/$(KIND_CLUSTER_NAME).config $(HOME)/.kube/config; \
+		fi; \
 		echo "=== 集群就绪 ==="; \
 		kubectl cluster-info; \
 		echo ""; \
@@ -71,10 +83,10 @@ create-kind-cluster: ## 用 docker run 创建 Kind 集群（纯 Docker 方式）
 		kubectl config current-context; \
 		echo ""; \
 		echo "# 节点"; \
-		kubectl get nodes -o wide; \
+		kubectl get nodes --context $$CTX_NAME -o wide; \
 		echo ""; \
 		echo "# 系统组件"; \
-		kubectl get pods -n kube-system; \
+		kubectl get pods --context $$CTX_NAME -n kube-system; \
 		echo ""; \
 		echo "=== 自定义集群操作示例 ==="; \
 		echo ""; \
@@ -82,17 +94,17 @@ create-kind-cluster: ## 用 docker run 创建 Kind 集群（纯 Docker 方式）
 		echo "  make create-kind-cluster KIND_CLUSTER_NAME=my-cluster"; \
 		echo ""; \
 		echo "# 用 --context 查询指定集群："; \
-		echo "  kubectl get nodes --context kubernetes-admin@my-cluster"; \
-		echo "  kubectl get pods -n kube-system --context kubernetes-admin@my-cluster"; \
+		echo "  kubectl get nodes --context $$CTX_NAME"; \
+		echo "  kubectl get pods -n kube-system --context $$CTX_NAME"; \
 		echo ""; \
 		echo "# 用独立 kubeconfig 查询："; \
-		echo "  kubectl --kubeconfig ~/.kube/my-cluster.config get nodes"; \
+		echo "  kubectl --kubeconfig ~/.kube/$(KIND_CLUSTER_NAME).config get nodes"; \
 		echo ""; \
 		echo "# 切换默认 context："; \
-		echo "  kubectl config use-context kubernetes-admin@my-cluster"; \
+		echo "  kubectl config use-context $$CTX_NAME"; \
 		echo ""; \
 		echo "# 删除指定集群："; \
-		echo "  make delete-kind-cluster KIND_CLUSTER_NAME=my-cluster"; \
+		echo "  make delete-kind-cluster KIND_CLUSTER_NAME=$(KIND_CLUSTER_NAME)"; \
 	fi
 
 delete-kind-cluster: ## 删除 Kind 集群容器
