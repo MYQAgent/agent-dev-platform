@@ -4,6 +4,50 @@
 
 ---
 
+## 创建 Kind 集群 Kind cluster
+
+本平台用 `make create-kind-cluster` 创建本地 Kind 集群（纯 Docker 方式）。
+
+### 自定义集群名称
+
+```bash
+# 默认名称 kagent
+make create-kind-cluster
+
+# 自定义名称
+make create-kind-cluster KIND_CLUSTER_NAME=my-cluster
+```
+
+名称会影响以下内容：
+
+| 字段 | `KIND_CLUSTER_NAME=kagent` | `KIND_CLUSTER_NAME=my-cluster` |
+|------|---------------------------|-------------------------------|
+| 容器名 | `kagent-control-plane` | `my-cluster-control-plane` |
+| kubeconfig 文件 | `~/.kube/kagent.config` | `~/.kube/my-cluster.config` |
+| kubeconfig context | `kubernetes-admin@kagent` | `kubernetes-admin@my-cluster` |
+
+### 创建后验证
+
+```bash
+# 查看 context
+kubectl config current-context
+
+# 查看节点
+kubectl get nodes -o wide
+
+# 查询指定集群
+kubectl get nodes --context kubernetes-admin@my-cluster
+kubectl --kubeconfig ~/.kube/my-cluster.config get pods -n kube-system
+```
+
+### 删除集群
+
+```bash
+make delete-kind-cluster KIND_CLUSTER_NAME=my-cluster
+```
+
+---
+
 ## 问题场景 Problem
 
 | 场景 | 风险 |

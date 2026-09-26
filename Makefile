@@ -65,6 +65,34 @@ create-kind-cluster: ## 用 docker run 创建 Kind 集群（纯 Docker 方式）
 		sed "s|server: https://.*:6443|server: https://127.0.0.1:$(KIND_API_PORT)|g" $(HOME)/.kube/$(KIND_CLUSTER_NAME).config > $(HOME)/.kube/config; \
 		echo "=== 集群就绪 ==="; \
 		kubectl cluster-info; \
+		echo ""; \
+		echo "=== 集群验证 ==="; \
+		echo "# 当前 context"; \
+		kubectl config current-context; \
+		echo ""; \
+		echo "# 节点"; \
+		kubectl get nodes -o wide; \
+		echo ""; \
+		echo "# 系统组件"; \
+		kubectl get pods -n kube-system; \
+		echo ""; \
+		echo "=== 自定义集群操作示例 ==="; \
+		echo ""; \
+		echo "# 创建时指定名称："; \
+		echo "  make create-kind-cluster KIND_CLUSTER_NAME=my-cluster"; \
+		echo ""; \
+		echo "# 用 --context 查询指定集群："; \
+		echo "  kubectl get nodes --context kubernetes-admin@my-cluster"; \
+		echo "  kubectl get pods -n kube-system --context kubernetes-admin@my-cluster"; \
+		echo ""; \
+		echo "# 用独立 kubeconfig 查询："; \
+		echo "  kubectl --kubeconfig ~/.kube/my-cluster.config get nodes"; \
+		echo ""; \
+		echo "# 切换默认 context："; \
+		echo "  kubectl config use-context kubernetes-admin@my-cluster"; \
+		echo ""; \
+		echo "# 删除指定集群："; \
+		echo "  make delete-kind-cluster KIND_CLUSTER_NAME=my-cluster"; \
 	fi
 
 delete-kind-cluster: ## 删除 Kind 集群容器
