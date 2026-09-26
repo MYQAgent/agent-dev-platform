@@ -107,9 +107,23 @@ create-kind-cluster: ## 用 docker run 创建 Kind 集群（纯 Docker 方式）
 		echo "  make delete-kind-cluster KIND_CLUSTER_NAME=$(KIND_CLUSTER_NAME)"; \
 	fi
 
-delete-kind-cluster: ## 删除 Kind 集群容器
-	@echo "=== 删除集群容器: $(KIND_NODE_NAME) ==="
-	@docker rm -f $(KIND_NODE_NAME) 2>/dev/null || echo "容器不存在"
+delete-kind-cluster: ## 删除 Kind 集群容器并清理 kubeconfig
+	@echo "=== 删除集群容器: $(KIND_NODE_NAME) ==="; \
+	docker rm -f $(KIND_NODE_NAME) 2>/dev/null || echo "容器不存在"; \
+	echo "=== 清理 kubeconfig ==="; \
+	CFG=$(HOME)/.kube/$(KIND_CLUSTER_NAME).config; \
+	if [ -f $$CFG ]; then \
+		CTX=$$(grep 'current-context:' $$CFG | awk '{print $$2}'); \
+		rm -f $$CFG; \
+		echo "已删除: $$CFG"; \
+		if [ -n "$$CTX" ] && grep -q "$$CTX" $(HOME)/.kube/config 2>/dev/null; then \
+			kubectl config delete-context $$CTX 2>/dev/null || true; \
+			kubectl config delete-cluster $$(echo $$CTX | sed 's/.*@//') 2>/dev/null || true; \
+			echo "已移除 context: $$CTX"; \
+		fi; \
+	else \
+		echo "kubeconfig 文件不存在: $$CFG"; \
+	fi
 
 kind-kubecfg: ## 打印集群 kubeconfig 路径
 	@echo "$(HOME)/.kube/$(KIND_CLUSTER_NAME).config"
