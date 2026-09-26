@@ -5,6 +5,7 @@
   * [安装 kagent + kmcp](01-basics/02-install.md)
   * [v2 架构](01-basics/03-architecture.md)
   * [运行第一个 agent](01-basics/04-run-agent.md)
+  * [多集群管理](01-basics/05-multi-cluster.md)
 
 * 进阶 Intermediate
   * [Agent Plugins 格式](02-intermediate/01-skill-format.md)
@@ -18,7 +19,6 @@
   * [CI/CD 流水线](03-idp/02-pipelines.md)
   * [治理](03-idp/03-governance.md)
   * [多团队工作流](03-idp/04-multi-team.md)
-  * [多集群管理](03-idp/05-multi-cluster.md)
 
 * 最佳实践
   * [skill 设计](04-best-practices/skill-design.md)

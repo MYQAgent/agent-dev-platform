@@ -20,4 +20,4 @@ kubectl apply -f harness.yaml -f modelconfig.yaml -f remotemcpserver.yaml -f age
 
 1. 执行 `kubectl apply` 前先确认当前 context 目标。
 2. 推荐使用 `--context <cluster>` 显式指定集群，避免误操作。
-3. 参见 [docs/03-idp/05-multi-cluster.md](docs/03-idp/05-multi-cluster.md) 获取完整的多集群管理指南。
+3. 参见 [docs/01-basics/05-multi-cluster.md](docs/01-basics/05-multi-cluster.md) 获取完整的多集群管理指南。

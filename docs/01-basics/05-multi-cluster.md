@@ -4,6 +4,48 @@
 
 ---
 
+## kubectl 快速参考 Quick reference
+
+### 查看与切换
+
+```bash
+# 当前 context
+kubectl config current-context
+
+# 列出所有集群
+kubectl config get-contexts
+
+# 切换默认 context
+kubectl config use-context <name>
+```
+
+### 查询指定集群
+
+```bash
+# 方式 A：--context（推荐）
+kubectl get nodes --context <name>
+kubectl get pods -n kube-system --context <name>
+
+# 方式 B：独立 kubeconfig 文件
+kubectl --kubeconfig ~/.kube/kagent.config get nodes
+```
+
+### 创建与删除 Kind 集群
+
+```bash
+# 创建（默认名称 kagent）
+make create-kind-cluster
+
+# 自定义名称
+make create-kind-cluster KIND_CLUSTER_NAME=my-cluster
+
+# 删除（连带清理 kubeconfig）
+make delete-kind-cluster
+make delete-kind-cluster KIND_CLUSTER_NAME=my-cluster
+```
+
+---
+
 ## 创建 Kind 集群 Kind cluster
 
 本平台用 `make create-kind-cluster` 创建本地 Kind 集群（纯 Docker 方式）。
