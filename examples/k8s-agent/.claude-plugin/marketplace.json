@@ -17,7 +17,8 @@
       "skills": [
         "./skills/k8s-knowledge",
         "./skills/k8s-troubleshoot",
-        "./skills/k8s-security"
+        "./skills/k8s-security",
+        "./skills/k8s-cluster-context"
       ]
     }
   ]

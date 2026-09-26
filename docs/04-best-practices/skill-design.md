@@ -13,6 +13,7 @@
 | reference 按需加载 | SKILL.md < 500 行，重内容放 references/ |
 | 边缘情况处理 | 防止常见模式误报 |
 | 脚本输出结构化 | JSON 输出，优先调 CLI 而非 ad-hoc 解析 |
+| 多集群安全 | 含 kubectl 的 skill 必须前置 context 校验，禁止裸命令 |
 
 ---
 

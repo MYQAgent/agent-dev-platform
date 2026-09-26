@@ -18,6 +18,7 @@
   * [CI/CD 流水线](03-idp/02-pipelines.md)
   * [治理](03-idp/03-governance.md)
   * [多团队工作流](03-idp/04-multi-team.md)
+  * [多集群管理](03-idp/05-multi-cluster.md)
 
 * 最佳实践
   * [skill 设计](04-best-practices/skill-design.md)

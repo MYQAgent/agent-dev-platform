@@ -20,18 +20,20 @@ allowed-tools: Bash(kubectl:*) Read
 - 用 `scripts/` 下的脚本输出结构化信息（JSON），不要 ad-hoc 解析。
 - 排查顺序：资源状态 → 事件 → 日志 → 依赖链，由浅入深。
 - 诊断前先确认目标 namespace 与资源名，不要跨 namespace 误查。
+- **所有 kubectl 命令必须前置 context 校验：运行 `scripts/check-context.sh`（来自 `k8s-cluster-context`）或等价命令确认目标集群。**
+- **所有 kubectl 命令必须使用 `--context <cluster>` 显式指定目标集群，禁止使用裸命令。**
 
 ## 排查工作流 Workflow
 
 1. **资源状态**：查资源是否 Ready
    ```bash
-   kubectl get pods -n <ns>
-   kubectl describe pod <name> -n <ns>
+   kubectl get pods --context <cluster> -n <ns>
+   kubectl describe pod <name> --context <cluster> -n <ns>
    ```
 2. **事件**：查 Events 找直接原因
 3. **日志**：查容器日志与上一次崩溃日志
    ```bash
-   kubectl logs <pod> -n <ns> --previous
+   kubectl logs <pod> --context <cluster> -n <ns> --previous
    ```
 4. **依赖链**：Service → Endpoints → Pod 是否匹配
 
@@ -47,7 +49,7 @@ allowed-tools: Bash(kubectl:*) Read
 
 ## 辅助脚本 Helper scripts
 
-运行 `scripts/diagnose.sh <pod> -n <ns>` 输出结构化诊断结果（状态/事件/日志摘要）。
+运行 `scripts/diagnose.sh <pod> -n <ns> -c <cluster>` 输出结构化诊断结果（状态/事件/日志摘要）。
 
 ## 边缘情况 Edge cases
 

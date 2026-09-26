@@ -20,7 +20,9 @@ allowed-tools: Bash(kubectl:*) Read
 - 生成 YAML 前，核对 apiVersion 与 kind 的对应关系（见下表），绝不臆造 API 版本。
 - 字段名不确定时，加载 `references/resource-cheatsheet.md` 核对，不要猜。
 - 回答需要细节时，加载对应的 reference 文件，不要凭空发挥。
-- 若在 GitOps 仓库中工作，先 `kubectl api-resources` 盘点可用资源，再写清单。
+- 若在 GitOps 仓库中工作，先 `kubectl api-resources --context <cluster>` 盘点可用资源，再写清单。
+- **所有 kubectl 命令必须前置 context 校验：运行 `bash <(kubectl config current-context)` 或加载 `k8s-cluster-context` skill 的 `check-context.sh` 确认目标集群。**
+- **所有 kubectl 命令必须使用 `--context <cluster>` 显式指定目标集群，禁止使用裸命令。**
 
 ## 核心资源速查 Core resources
 

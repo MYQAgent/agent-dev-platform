@@ -1,7 +1,7 @@
 # Makefile for the k8s-agent example skill bundle.
 # Run 'make help' for available targets.
 
-SKILLS := skills/k8s-knowledge skills/k8s-troubleshoot skills/k8s-security
+SKILLS := skills/k8s-knowledge skills/k8s-troubleshoot skills/k8s-security skills/k8s-cluster-context
 REGISTRY ?= ghcr.io/example
 IMAGE ?= $(REGISTRY)/k8s-skills
 TAG ?= 0.1.0

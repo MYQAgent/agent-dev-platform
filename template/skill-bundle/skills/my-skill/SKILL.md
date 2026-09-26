@@ -18,6 +18,7 @@ allowed-tools: Bash(<tool>:*) Read
 **规则：**
 - 生成内容前先核对关键约束（API 版本、字段名等）。
 - 需要细节时加载 `references/` 下的文件，不要凭空发挥。
+- **若 skill 调用了 kubectl，所有命令必须使用 `--context <cluster>` 显式指定目标集群，并在 workflow 开头添加 context 校验步骤。**
 
 ## 工作流 Workflow
 

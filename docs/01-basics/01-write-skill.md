@@ -78,7 +78,7 @@ allowed-tools: Bash(kubectl:*) Read
 | `name` | ✅ | 1-64 字符，小写字母/数字/连字符，不能以连字符开头或结尾，必须与目录名一致 |
 | `description` | ✅ | 1-1024 字符，说明**做什么 + 何时用**，含关键词便于 agent 识别 |
 | `license` | — | 许可证名 |
-| `compatibility` | — | 环境要求（如 `Requires git, docker, jq`） |
+| `compatibility` | — | 环境要求（如 `Requires git, docker, jq`）。若 skill 调用了 kubectl，必须注明集群访问需求，并在 workflow 中声明 context 校验。 |
 | `metadata` | — | 任意键值对 |
 | `allowed-tools` | — | 空格分隔的预批准工具（实验性） |
 

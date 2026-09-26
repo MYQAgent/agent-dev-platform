@@ -20,6 +20,8 @@ allowed-tools: Bash(kubectl:*) Read
 - 按 `references/security-checklist.md` 的清单逐项检查。
 - 输出报告按严重程度分级：Critical / High / Medium / Low。
 - 每条建议给出具体修复动作，不只描述问题。
+- **所有 kubectl 命令必须前置 context 校验：运行 `scripts/check-context.sh`（来自 `k8s-cluster-context`）或等价命令确认目标集群。**
+- **所有 kubectl 命令必须使用 `--context <cluster>` 显式指定目标集群，禁止使用裸命令。**
 
 ## 审计工作流 Workflow
 
