@@ -24,7 +24,7 @@ build: ## Package skills into an OCI artifact (requires oras)
 push: ## Push to registry (alias for build)
 	$(MAKE) build
 
-test: ## Run evals (placeholder; see docs/02-intermediate/05-testing.md)
+test: ## Run evals (placeholder; see docs/03-skills/04-testing.md)
 	@echo "run evals via sub-agent per skill/evals/evals.json"
 	@for s in $(SKILLS); do \
 		echo "evals: $$s/evals/evals.json"; \

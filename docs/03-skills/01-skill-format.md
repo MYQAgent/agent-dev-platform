@@ -110,4 +110,4 @@ spec:
 ## 下一步 Next
 
 - 打包为 OCI 并引用 → [02-skill-bundle.md](02-skill-bundle.md)
-- 测试与 evals → [05-testing.md](05-testing.md)
+- 测试与 evals → [04-testing.md](04-testing.md)

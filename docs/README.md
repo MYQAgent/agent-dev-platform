@@ -24,8 +24,8 @@ skill 写法以 [fluxcd/agent-skills](https://github.com/fluxcd/agent-skills) �
 | 你的目标 | 从这里开始 | 成本 |
 |---------|-----------|------|
 | 只是想学怎么写 skill | [docs/01-basics/01-write-skill.md](docs/01-basics/01-write-skill.md) | 零集群 |
-| 想跑通一个 agent | [docs/01-basics/04-run-agent.md](docs/01-basics/04-run-agent.md) | 官方镜像 |
-| 想发布 skill 给团队 | [docs/02-intermediate/02-skill-bundle.md](docs/02-intermediate/02-skill-bundle.md) | 需 registry |
+| 想跑通一个 agent | [docs/02-agents/01-first-agent.md](docs/02-agents/01-first-agent.md) | 官方镜像 |
+| 想发布 skill 给团队 | [docs/03-skills/02-skill-bundle.md](docs/03-skills/02-skill-bundle.md) | 需 registry |
 | 想建平台 | [docs/03-idp/01-cluster-setup.md](docs/03-idp/01-cluster-setup.md) | 需 Substrate |
 
 ---
@@ -36,7 +36,8 @@ skill 写法以 [fluxcd/agent-skills](https://github.com/fluxcd/agent-skills) �
 myqagent-dev-platform/
 ├── docs/              分层文档（中英双语，cheat sheet 风格）
 │   ├── 01-basics/      【基本】个人开发者（零/低集群）
-│   ├── 02-intermediate/【进阶】团队开发
+│   ├── 02-agents/    【Agents】创建与管理 agent
+│   ├── 03-skills/    【Skills】skill 开发与集成
 │   ├── 03-idp/         【IDP】平台工程
 │   └── 04-best-practices/ 参考
 ├── examples/
@@ -61,6 +62,6 @@ myqagent-dev-platform/
 
 ```
 个人开发者 → docs/01-basics          30 分钟
-团队       → docs/02-intermediate    1 天
+团队       → docs/02-agents + docs/03-skills  1 天
 平台工程   → docs/03-idp             按需
 ```

@@ -104,5 +104,5 @@ spec:
 
 ## 下一步 Next
 
-- Harness 四种 adapter → [04-harness.md](04-harness.md)
+- Harness 四种 adapter → [../02-agents/02-harness.md](../02-agents/02-harness.md)
 - 完整 MCP 示例 → [../../examples/k8s-agent/](../../examples/k8s-agent/)

@@ -90,5 +90,5 @@ AgentTemplate.spec.skills:
 
 ## 下一步 Next
 
-- 跑通一个 agent → [04-run-agent.md](04-run-agent.md)
-- 深入 skill 格式 → [../02-intermediate/01-skill-format.md](../02-intermediate/01-skill-format.md)
+- 创建第一个 agent → [../02-agents/01-first-agent.md](../02-agents/01-first-agent.md)
+- 深入 skill 格式 → [../03-skills/01-skill-format.md](../03-skills/01-skill-format.md)

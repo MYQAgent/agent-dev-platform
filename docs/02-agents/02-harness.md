@@ -91,5 +91,6 @@ spec:
 
 ## 下一步 Next
 
-- 测试与 evals → [05-testing.md](05-testing.md)
-- 平台级部署 Harness → [../03-idp/01-cluster-setup.md](../03-idp/01-cluster-setup.md)
+- 创建第一个 agent → [01-first-agent.md](01-first-agent.md)
+- 测试与 evals → [../03-skills/04-testing.md](../03-skills/04-testing.md)
+- 平台级部署 Harness → [../04-idp/01-cluster-setup.md](../04-idp/01-cluster-setup.md)

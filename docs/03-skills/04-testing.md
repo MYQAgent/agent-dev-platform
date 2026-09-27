@@ -83,5 +83,5 @@ k8s-knowledge-003: 3/3 passed
 
 ## 下一步 Next
 
-- 最佳实践 → [../04-best-practices/skill-design.md](../04-best-practices/skill-design.md)
+- 最佳实践 → [../05-best-practices/skill-design.md](../05-best-practices/skill-design.md)
 - 完整 evals 示例 → [../../examples/k8s-agent/](../../examples/k8s-agent/)

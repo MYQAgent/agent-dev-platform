@@ -124,5 +124,5 @@ npx skills-ref validate ./skills/my-skill
 
 写好了 SKILL.md，下一步：
 
-- 想跑起来看效果 → [04-run-agent.md](04-run-agent.md)
-- 想深入了解格式规范 → [../02-intermediate/01-skill-format.md](../02-intermediate/01-skill-format.md)
+- 想跑起来看效果 → [../02-agents/01-first-agent.md](../02-agents/01-first-agent.md)
+- 想深入了解格式规范 → [../03-skills/01-skill-format.md](../03-skills/01-skill-format.md)

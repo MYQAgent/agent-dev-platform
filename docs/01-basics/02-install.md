@@ -65,4 +65,4 @@ kagent version
 ## 下一步 Next
 
 - 想理解 v2 架构 → [03-architecture.md](03-architecture.md)
-- 想直接跑起来 → [04-run-agent.md](04-run-agent.md)
+- 想创建第一个 agent → [../02-agents/01-first-agent.md](../02-agents/01-first-agent.md)

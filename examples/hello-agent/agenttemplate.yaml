@@ -27,7 +27,7 @@ spec:
 
 ## 运行 Run
 
-前提：已有 Harness（见 [docs/01-basics/04-run-agent.md](../../docs/01-basics/04-run-agent.md)）。
+前提：已有 Harness（见 [docs/02-agents/01-first-agent.md](../../docs/02-agents/01-first-agent.md)）。
 
 ```bash
 kubectl apply -f agenttemplate.yaml

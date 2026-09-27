@@ -12,7 +12,7 @@ cd /path/to/kagent
 ./scripts/setup-cluster/setup-cluster.sh
 ```
 
-> 这是贡献者路径，10 步。仅想跑 agent 请用 [消费者路径](../01-basics/04-run-agent.md)。
+> 这是贡献者路径，10 步。仅想跑 agent 请用 [创建第一个 agent](../02-agents/01-first-agent.md)。
 
 ---
 

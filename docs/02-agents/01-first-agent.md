@@ -1,0 +1,250 @@
+# 创建第一个 agent
+
+> Create your first agent — Harness + AgentTemplate + ModelConfig，从零到对话。
+
+---
+
+## 前置依赖
+
+- Docker（k3d 自动安装）/ kubectl / Helm
+- 一个模型 API key（OpenAI / DeepSeek / Ollama 任选）
+- `export KUBECONFIG=$HOME/.kube/config`
+
+```bash
+# 建集群
+make create-kind-cluster
+
+# 设 API key（以 OpenAI 为例）
+export KAGENT_DEFAULT_MODEL_PROVIDER=OpenAI
+export OPENAI_API_KEY=sk-your-openai-api-key
+
+# Helm 安装 kagent（controller + UI + PostgreSQL）
+make helm-install
+
+# 打开 UI（可选）
+kubectl port-forward svc/kagent-ui 8001:8080
+```
+
+> 纯 Helm 命令（不依赖 Makefile）：
+> ```bash
+> helm upgrade --install kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds --version 1.0.0-alpha3 --namespace kagent --create-namespace
+> helm upgrade --install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent --version 1.0.0-alpha3 --namespace kagent -f your-values.yaml
+> ```
+
+---
+
+## Step 1：配置 LLM（ModelConfig）
+
+Agent 需要一个 LLM 后端。创建 ModelConfig 前，先创建保存 API key 的 Secret：
+
+```bash
+# OpenAI
+kubectl create secret generic openai-creds \
+  --namespace kagent \
+  --from-literal=apiKey=sk-your-openai-api-key
+
+# 或 DeepSeek
+kubectl create secret generic deepseek-creds \
+  --namespace kagent \
+  --from-literal=apiKey=sk-your-deepseek-api-key
+```
+
+然后创建 ModelConfig。选一个你有的 provider：
+
+````yaml tabs
+OpenAI:
+  ```yaml
+  apiVersion: kagent.dev/v1alpha3
+  kind: ModelConfig
+  metadata:
+    name: my-model-config
+    namespace: kagent
+  spec:
+    provider: OpenAI
+    model: gpt-4o
+    apiKeySecret: openai-creds
+    apiKeySecretKey: apiKey
+  ```
+
+DeepSeek（OpenAI 兼容）:
+  ```yaml
+  apiVersion: kagent.dev/v1alpha3
+  kind: ModelConfig
+  metadata:
+    name: my-model-config
+    namespace: kagent
+  spec:
+    provider: OpenAI
+    model: deepseek-chat
+    openAI:
+      baseUrl: https://api.deepseek.com/v1
+    apiKeySecret: deepseek-creds
+    apiKeySecretKey: apiKey
+  ```
+
+Ollama（本地）:
+  ```yaml
+  apiVersion: kagent.dev/v1alpha3
+  kind: ModelConfig
+  metadata:
+    name: my-model-config
+    namespace: kagent
+  spec:
+    provider: Ollama
+    model: qwen2.5:7b
+    ollama:
+      host: http://ollama.kagent.svc:11434
+    apiKeyPassthrough: false
+  ```
+````
+
+```bash
+kubectl apply -f modelconfig.yaml
+```
+
+---
+
+## Step 2：创建运行时（Harness）
+
+Harness 描述 agent「怎么跑」——用什么运行时镜像、跑在哪个 WorkerPool 上、接纳哪些 AgentTemplate。
+
+```yaml
+# harness.yaml
+apiVersion: kagent.dev/v1alpha3
+kind: Harness
+metadata:
+  name: my-harness
+  namespace: kagent
+spec:
+  kagent: {}
+  workload:
+    image: ghcr.io/kagent-dev/kagent/golang-adk@sha256:699c7a36daa0050d5954f42ad3b614690d825664cf64ffe8871dbe20dc68464e
+  substrate:
+    workerPoolRef:
+      name: kagent-default
+    snapshotPolicy:
+      location: s3://ate-snapshots/kagent/
+  allowedAgentTemplates:
+    selector:
+      matchLabels:
+        kagent.dev/harness: my-harness
+```
+
+```bash
+kubectl apply -f harness.yaml
+```
+
+---
+
+## Step 3：创建 agent（AgentTemplate）
+
+AgentTemplate 描述 agent「跑什么」——system prompt、引用哪个 ModelConfig、有哪些技能。
+
+关键：`metadata.labels` 必须匹配 Harness 的 `allowedAgentTemplates.selector`，否则不会被接纳。
+
+```yaml
+# agenttemplate.yaml
+apiVersion: kagent.dev/v1alpha3
+kind: AgentTemplate
+metadata:
+  name: my-first-agent
+  namespace: kagent
+  labels:
+    kagent.dev/harness: my-harness
+spec:
+  description: My first kagent agent
+  modelConfig:
+    name: my-model-config
+  systemPrompt: You are a concise, helpful assistant.
+```
+
+```bash
+kubectl apply -f agenttemplate.yaml
+```
+
+---
+
+## Step 4：验证编译就绪
+
+检查 AgentTemplate 是否被 Harness 接纳并编译通过：
+
+```bash
+kagent get agent-template my-first-agent
+```
+
+期望输出：
+
+```
++----------------+------------------+-------+----------------------+
+| NAME           | HARNESS          | READY | CREATED              |
++----------------+------------------+-------+----------------------+
+| my-first-agent | my-harness       | TRUE  | 2026-08-31T15:01:44Z |
++----------------+------------------+-------+----------------------+
+```
+
+`READY` 为 `FALSE` 时查看具体失败阶段：
+
+```bash
+kagent get agent-template my-first-agent -o json
+```
+
+四个 conditions 的含义：
+
+| Condition | 含义 | 失败常见原因 |
+|-----------|------|------------|
+| `Accepted` | Harness 的 selector 是否匹配 | label 不匹配 |
+| `ResolvedRefs` | ModelConfig / 工具引用是否存在 | ModelConfig 名写错 |
+| `Compatible` | 配置是否适合该 Harness 运行时 | 不支持的 provider |
+| `Ready` | 编译已完成 | 镜像 digest 无效 |
+
+---
+
+## Step 5：创建 AgentInstance 并对话
+
+AgentInstance 是一个可运行的对话实例。创建它会在 WorkerPool 上启动一个 Actor：
+
+```bash
+# 创建实例
+kagent create agent-instance \
+  --harness my-harness \
+  --agent-template my-first-agent
+```
+
+保存 ID 并对话：
+
+```bash
+export INSTANCE_ID=$(kagent get agent-instance -o json \
+  | jq -r '[.agentInstances[] | select(.agentTemplate.name == "my-first-agent")] | sort_by(.createdAt) | last | .id')
+
+kagent invoke --agent-instance $INSTANCE_ID --task "What is 2+2?"
+# 输出: 4
+
+kagent invoke --agent-instance $INSTANCE_ID --task "What did I just ask you?"
+# 输出: You asked what 2+2 is.
+```
+
+对话也通过 UI 可见：`kubectl port-forward svc/kagent-ui 8001:8080` → 浏览器访问 `http://localhost:8001`。
+
+---
+
+## 清理
+
+```bash
+# 删除 AgentInstance
+kagent get agent-instance -o json \
+  | jq -r '.agentInstances[] | select(.agentTemplate.name == "my-first-agent") | .id' \
+  | xargs -n1 kagent delete agent-instance
+
+# 删除 CRD
+kubectl delete agenttemplate my-first-agent -n kagent
+kubectl delete harness my-harness -n kagent
+kubectl delete modelconfig my-model-config -n kagent
+```
+
+---
+
+## 下一步
+
+- 理解 Harness 四种 adapter → [02-harness.md](02-harness.md)
+- 写自己的 skill 并接入 → [../03-skills/01-skill-format.md](../03-skills/01-skill-format.md)
+- 架构全景 → [../01-basics/03-architecture.md](../01-basics/03-architecture.md)
