@@ -28,7 +28,7 @@ export OPENAI_API_KEY=sk-your-openai-api-key
 make helm-install
 
 # 打开 UI（可选）
-kubectl port-forward svc/kagent-ui 8001:8080
+kubectl port-forward -n kagent svc/kagent-ui 8082:8080
 ```
 
 > 纯 Helm 命令（不依赖 Makefile）：
@@ -151,7 +151,7 @@ kagent invoke --agent-instance $INSTANCE_ID --task "What did I just ask you?"
 # 输出: You asked what 2+2 is.
 ```
 
-对话也通过 UI 可见：`kubectl port-forward svc/kagent-ui 8001:8080` → 浏览器访问 `http://localhost:8001`。
+对话也通过 UI 可见：`kubectl port-forward -n kagent svc/kagent-ui 8082:8080` → 浏览器访问 `http://localhost:8082`。
 
 ---
 
