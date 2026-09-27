@@ -30,7 +30,7 @@ kubectl get pods -n kube-system --context <name>
 kubectl --kubeconfig ~/.kube/kagent.config get nodes
 ```
 
-### 创建与删除 Kind 集群
+### 创建与删除 k3d 集群
 
 ```bash
 # 创建（默认名称 kagent）
@@ -39,16 +39,20 @@ make create-kind-cluster
 # 自定义名称
 make create-kind-cluster KIND_CLUSTER_NAME=my-cluster
 
-# 删除（连带清理 kubeconfig）
+# 切换集群上下文
+kubectl config use-context default                   # 切回宿主（k3s）
+kubectl config use-context k3d-my-cluster            # 切到 k3d
+
+# 删除（自动清理 context）
 make delete-kind-cluster
 make delete-kind-cluster KIND_CLUSTER_NAME=my-cluster
 ```
 
 ---
 
-## 创建 Kind 集群 Kind cluster
+## 创建集群 Cluster creation
 
-本平台用 `make create-kind-cluster` 创建本地 Kind 集群（纯 Docker 方式）。
+本平台用 `make create-kind-cluster` 通过 k3d 在 Docker 内创建 k3s 集群。
 
 ### 自定义集群名称
 
@@ -64,30 +68,32 @@ make create-kind-cluster KIND_CLUSTER_NAME=my-cluster
 
 | 字段 | `KIND_CLUSTER_NAME=kagent` | `KIND_CLUSTER_NAME=my-cluster` |
 |------|---------------------------|-------------------------------|
-| 容器名 | `kagent-control-plane` | `my-cluster-control-plane` |
-| kubeconfig 文件 | `~/.kube/kagent.config` | `~/.kube/my-cluster.config` |
-| kubeconfig context | 由 kubeadm 自动生成（如 `kubernetes-admin@kubernetes`） | 同上 |
+| 集群 context | `k3d-kagent` | `k3d-my-cluster` |
+| 容器名 | `k3d-kagent-server-0` | `k3d-my-cluster-server-0` |
+
+> k3d 的 cluster/context/user 条目会直接写入 `kubectl` 当前读取的 kubeconfig 文件（可通过 `make kind-kubecfg` 查看）。
 
 ### 创建后验证
 
-集群创建完成后，终端会输出动态提取的 context 名称（如 `kubernetes-admin@kubernetes`）：
-
 ```bash
-# 查看当前 context
+# 查看所有上下文
+kubectl config get-contexts
+
+# 查看当前上下文
 kubectl config current-context
 
 # 查看节点
 kubectl get nodes -o wide
 
-# 查询指定集群（context 名以 Makefile 实际输出为准）
-kubectl config get-contexts                                # 列出所有 context
-kubectl get nodes --context <上一步查到的 context 名>
-kubectl --kubeconfig ~/.kube/my-cluster.config get pods -n kube-system
+# 切换上下文
+kubectl config use-context k3d-my-cluster            # 切到 k3d
+kubectl config use-context default                   # 切回宿主
 ```
 
 ### 删除集群
 
 ```bash
+# 删除集群并清理 kubeconfig 条目
 make delete-kind-cluster KIND_CLUSTER_NAME=my-cluster
 ```
 

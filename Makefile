@@ -6,11 +6,21 @@
 
 PORT              ?= 3080
 KIND_CLUSTER_NAME ?= kagent
-KIND_NODE_IMAGE   ?= kindest/node:v1.32.2
-KIND_NODE_NAME    ?= $(KIND_CLUSTER_NAME)-control-plane
-KIND_API_PORT     ?= 8443
+K3D_CLUSTER_NAME  ?= $(KIND_CLUSTER_NAME)
+# 0=自动检测空闲端口，可指定如 KIND_API_PORT=8443
+KIND_API_PORT     ?= 0
 HELM_NAMESPACE    ?= kagent
 KAGENT_VERSION    ?= 1.0.0-alpha3
+
+# 自动检测 kubectl 当前读的 kubeconfig 文件
+KUBECONFIG_TARGET ?= $(shell \
+  if [ -n "$$KUBECONFIG" ]; then echo "$${KUBECONFIG%%:*}"; \
+  elif [ -L "$$(command -v kubectl)" ] && \
+       [ "$$(readlink -f $$(command -v kubectl))" = "/usr/local/bin/k3s" ]; then \
+    echo "/etc/rancher/k3s/k3s.yaml"; \
+  else \
+    echo "$$(HOME)/.kube/config"; \
+  fi)
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  %-14s %s\n", $$1, $$2}'
@@ -30,94 +40,85 @@ docs-github: ## 提示：推送到 GitHub 后原生渲染
 	@echo "git push 后 GitHub 原生渲染 markdown，README.md 为入口"
 
 # ──────────────────────────────────────────────
-# 集群管理（纯 docker run，无需 kind CLI）
+# 集群管理（k3d - Docker 内运行 k3s，开箱即用）
 # ──────────────────────────────────────────────
 
-create-kind-cluster: ## 用 docker run 创建 Kind 集群（纯 Docker 方式）
-	@echo "=== 创建 Kind 集群: $(KIND_CLUSTER_NAME) ==="; \
-	CONTAINER_EXISTS=$$(docker ps -a --format '{{.Names}}' | grep -q '^$(KIND_NODE_NAME)$$' && echo 1 || echo 0); \
-	CONTAINER_RUNNING=$$(docker ps --format '{{.Names}}' | grep -q '^$(KIND_NODE_NAME)$$' && echo 1 || echo 0); \
-	if [ "$$CONTAINER_RUNNING" = "1" ]; then \
-		echo "集群容器 $(KIND_NODE_NAME) 已在运行，跳过创建"; \
+K3D_VERSION ?= v5.8.3
+
+create-kind-cluster: ## 用 k3d 创建 k3s 集群（Docker 内，开箱即用）
+	@echo "=== 创建 k3d 集群: $(K3D_CLUSTER_NAME) ==="; \
+	if ! command -v k3d >/dev/null 2>&1; then \
+		echo "安装 k3d $(K3D_VERSION)..."; \
+		curl -sLo /usr/local/bin/k3d https://github.com/k3d-io/k3d/releases/download/$(K3D_VERSION)/k3d-linux-amd64 && \
+		chmod +x /usr/local/bin/k3d; \
+	fi; \
+	ULIMIT=$$(docker run --rm alpine:latest sh -c 'ulimit -n' 2>/dev/null || echo 1024); \
+	if [ "$$ULIMIT" -lt 65536 ]; then \
+		echo "Docker nofile ulimit=$$ULIMIT（k3s 需要 ≥65536），自动配置..."; \
+		python3 -c 'import json; cfg=json.load(open("/etc/docker/daemon.json")); cfg.setdefault("default-ulimits",{})["nofile"]={"Name":"nofile","Soft":65536,"Hard":131072}; json.dump(cfg,open("/etc/docker/daemon.json","w"),indent=2)' && systemctl restart docker 2>/dev/null; \
+		until docker info >/dev/null 2>&1; do sleep 1; done; \
+	fi; \
+	if k3d cluster list 2>/dev/null | grep -q '^$(K3D_CLUSTER_NAME) '; then \
+		echo "集群 $(K3D_CLUSTER_NAME) 已存在，跳过创建"; \
 	else \
-		if [ "$$CONTAINER_EXISTS" = "1" ]; then \
-			echo "清理残留容器 $(KIND_NODE_NAME)..."; \
-			docker rm -f $(KIND_NODE_NAME) > /dev/null 2>&1; \
-			rm -f $(HOME)/.kube/$(KIND_CLUSTER_NAME).config; \
-			echo "已清理"; \
+		TGT="$(KUBECONFIG_TARGET)"; \
+		PORT="$(KIND_API_PORT)"; \
+		if [ "$$PORT" = "0" ]; then \
+			PORT=$$(python3 -c 'import socket; s=socket.socket(); s.bind(("",0)); print(s.getsockname()[1]); s.close()'); \
 		fi; \
-		docker run -d \
-			--name $(KIND_NODE_NAME) \
-			--privileged \
-			--restart=on-failure:3 \
-			--hostname $(KIND_NODE_NAME) \
-			--tmpfs /tmp \
-			--tmpfs /run \
-			-v /lib/modules:/lib/modules:ro \
-			-p 127.0.0.1:$(KIND_API_PORT):6443 \
-			$(KIND_NODE_IMAGE) 2>&1; \
-		echo "等待容器就绪..."; \
-		for i in 1 2 3 4 5 6 7 8 9 10; do \
-			CONTAINER_STATUS=$$(docker inspect -f '{{.State.Status}}' $(KIND_NODE_NAME) 2>/dev/null); \
-			if [ "$$CONTAINER_STATUS" = "running" ]; then \
-				CONTAINER_IP=$$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(KIND_NODE_NAME)); \
-				echo "容器 IP: $$CONTAINER_IP"; \
+		echo "目标 kubeconfig: $$TGT，API 端口: $$PORT"; \
+		echo "启动集群，映射端口 127.0.0.1:$${PORT}:6443..."; \
+		k3d cluster create $(K3D_CLUSTER_NAME) \
+			--port 127.0.0.1:$${PORT}:6443@server:0 \
+			--k3s-arg '--disable=traefik@server:0' \
+			--kubeconfig-update-default=false || { \
+			echo "k3d 创建失败（可能此环境不支持嵌套容器化运行 k3s）"; \
+			echo "提示: 当前环境已有 k3s 集群，可用以下命令直接使用："; \
+			echo "  make use-existing-cluster"; \
+			exit 1; }; \
+		echo "等待 k3d API 就绪..."; \
+		for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do \
+			if k3d kubeconfig get $(K3D_CLUSTER_NAME) >/dev/null 2>&1; then \
 				break; \
-			elif [ "$$CONTAINER_STATUS" = "exited" ]; then \
-				echo "错误: Kind 节点容器启动失败（此环境可能不支持嵌套容器化运行 Kind）"; \
-				docker rm -f $(KIND_NODE_NAME) > /dev/null 2>&1; \
-				echo ""; \
-				echo "提示: 当前环境已有 k3s 集群，可用以下命令直接使用："; \
-				echo "  make use-existing-cluster"; \
-				exit 1; \
 			fi; \
-			if [ "$$i" -eq 10 ]; then \
-				echo "错误: 容器未能在 20 秒内就绪"; \
-				docker rm -f $(KIND_NODE_NAME) > /dev/null 2>&1; \
+			if [ "$$i" -eq 15 ]; then \
+				echo "错误: k3d API 未能就绪"; \
+				k3d cluster delete $(K3D_CLUSTER_NAME) >/dev/null 2>&1; \
 				exit 1; \
 			fi; \
 			sleep 2; \
 		done; \
-		echo "=== 初始化集群（kubeadm init） ==="; \
-		if ! docker exec $(KIND_NODE_NAME) kubeadm init \
-			--kubernetes-version=v1.32.2 \
-			--apiserver-advertise-address=$$CONTAINER_IP \
-			--apiserver-cert-extra-sans=127.0.0.1 \
-			--pod-network-cidr=10.244.0.0/16 \
-			--service-cidr=10.96.0.0/12 \
-			--skip-phases=addon/kube-proxy; then \
-			echo "错误: kubeadm init 失败"; \
-			docker rm -f $(KIND_NODE_NAME) > /dev/null 2>&1; \
-			exit 1; \
-		fi; \
-		echo "=== 安装 CNI（flannel） ==="; \
-		docker exec $(KIND_NODE_NAME) kubectl --kubeconfig=/etc/kubernetes/admin.conf \
-			apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml; \
-		echo "=== 提取 kubeconfig ==="; \
-		mkdir -p $(HOME)/.kube; \
-		docker exec $(KIND_NODE_NAME) cat /etc/kubernetes/admin.conf > $(HOME)/.kube/$(KIND_CLUSTER_NAME).raw; \
-		CTX_NAME=$$(grep 'current-context:' $(HOME)/.kube/$(KIND_CLUSTER_NAME).raw | awk '{print $$2}'); \
-		sed "s|server: https://.*:6443|server: https://127.0.0.1:$(KIND_API_PORT)|g" \
-			$(HOME)/.kube/$(KIND_CLUSTER_NAME).raw > $(HOME)/.kube/$(KIND_CLUSTER_NAME).config; \
-		rm -f $(HOME)/.kube/$(KIND_CLUSTER_NAME).raw; \
-		if [ -f $(HOME)/.kube/config ]; then \
-			echo "=== 合并 kubeconfig（保留已有 context） ==="; \
-			KUBECONFIG=$(HOME)/.kube/config:$(HOME)/.kube/$(KIND_CLUSTER_NAME).config \
-			kubectl config view --flatten > $(HOME)/.kube/config.new 2>/dev/null && \
-			mv $(HOME)/.kube/config.new $(HOME)/.kube/config; \
-		else \
-			cp $(HOME)/.kube/$(KIND_CLUSTER_NAME).config $(HOME)/.kube/config; \
-		fi; \
+		echo "写入 k3d 集群到 $$TGT..."; \
+		K3D_CFG=$$(mktemp); \
+		k3d kubeconfig get $(K3D_CLUSTER_NAME) > $$K3D_CFG; \
+		SERVER="https://127.0.0.1:$${PORT}"; \
+		CA_FILE=$$(mktemp); \
+		CERT_FILE=$$(mktemp); \
+		KEY_FILE=$$(mktemp); \
+		grep 'certificate-authority-data:' $$K3D_CFG | sed 's/.*certificate-authority-data: //' | base64 -d > $$CA_FILE; \
+		grep 'client-certificate-data:' $$K3D_CFG | sed 's/.*client-certificate-data: //' | base64 -d > $$CERT_FILE; \
+		grep 'client-key-data:' $$K3D_CFG | sed 's/.*client-key-data: //' | base64 -d > $$KEY_FILE; \
+		kubectl config --kubeconfig $$TGT set-cluster k3d-$(K3D_CLUSTER_NAME) \
+			--server=$$SERVER --embed-certs --certificate-authority=$$CA_FILE >/dev/null; \
+		kubectl config --kubeconfig $$TGT set-credentials admin@k3d-$(K3D_CLUSTER_NAME) \
+			--embed-certs --client-certificate=$$CERT_FILE --client-key=$$KEY_FILE >/dev/null; \
+		kubectl config --kubeconfig $$TGT set-context k3d-$(K3D_CLUSTER_NAME) \
+			--cluster=k3d-$(K3D_CLUSTER_NAME) --user=admin@k3d-$(K3D_CLUSTER_NAME) >/dev/null; \
+		kubectl config --kubeconfig $$TGT use-context k3d-$(K3D_CLUSTER_NAME) >/dev/null; \
+		rm -f $$K3D_CFG $$CA_FILE $$CERT_FILE $$KEY_FILE; \
 		echo ""; \
-		echo "=== 集群就绪: $(KIND_CLUSTER_NAME) ==="; \
-		kubectl cluster-info --context $$CTX_NAME 2>/dev/null || kubectl cluster-info; \
+		echo "=== 集群就绪: $(K3D_CLUSTER_NAME) ==="; \
+		sleep 5; \
+		kubectl cluster-info; \
 		echo ""; \
 		echo "=== 集群验证 ==="; \
-		kubectl get nodes --context $$CTX_NAME -o wide; \
+		kubectl get nodes -o wide 2>&1 || echo "（节点未就绪，可以等几秒再试）"; \
 		echo ""; \
-		echo "# 独立 kubeconfig: ~/.kube/$(KIND_CLUSTER_NAME).config"; \
-		echo "# 切换 context:  kubectl config use-context $$CTX_NAME"; \
-		echo "# 删除集群:     make delete-kind-cluster KIND_CLUSTER_NAME=$(KIND_CLUSTER_NAME)"; \
+		echo "# 切换集群:"; \
+		echo "  kubectl config use-context k3d-$(K3D_CLUSTER_NAME)   # 切到 k3d"; \
+		echo "  kubectl config use-context default                    # 切回宿主"; \
+		echo ""; \
+		echo "# 删除: make delete-kind-cluster KIND_CLUSTER_NAME=$(KIND_CLUSTER_NAME)"; \
 	fi
 
 use-existing-cluster: ## 使用已有的 k3s 集群
@@ -141,26 +142,23 @@ use-existing-cluster: ## 使用已有的 k3s 集群
 		echo "可尝试: make create-kind-cluster"; \
 	fi
 
-delete-kind-cluster: ## 删除 Kind 集群容器并清理 kubeconfig
-	@echo "=== 删除集群容器: $(KIND_NODE_NAME) ==="; \
-	docker rm -f $(KIND_NODE_NAME) 2>/dev/null || echo "容器不存在"; \
-	echo "=== 清理 kubeconfig ==="; \
-	CFG=$(HOME)/.kube/$(KIND_CLUSTER_NAME).config; \
-	if [ -f $$CFG ]; then \
-		CTX=$$(grep 'current-context:' $$CFG | awk '{print $$2}'); \
-		rm -f $$CFG; \
-		echo "已删除: $$CFG"; \
-		if [ -n "$$CTX" ] && grep -q "$$CTX" $(HOME)/.kube/config 2>/dev/null; then \
-			kubectl config delete-context $$CTX 2>/dev/null || true; \
-			kubectl config delete-cluster $$(echo $$CTX | sed 's/.*@//') 2>/dev/null || true; \
-			echo "已移除 context: $$CTX"; \
+delete-kind-cluster: ## 删除 k3d 集群并清理 kubeconfig
+	@echo "=== 删除集群: $(K3D_CLUSTER_NAME) ==="; \
+	k3d cluster delete $(K3D_CLUSTER_NAME) 2>/dev/null || true; \
+	TGT="$(KUBECONFIG_TARGET)"; \
+	if [ -f "$$TGT" ]; then \
+		CURRENT=$$(kubectl config --kubeconfig $$TGT current-context 2>/dev/null); \
+		if [ "$$CURRENT" = "k3d-$(K3D_CLUSTER_NAME)" ]; then \
+			kubectl config --kubeconfig $$TGT use-context default >/dev/null 2>&1 || true; \
 		fi; \
-	else \
-		echo "kubeconfig 文件不存在: $$CFG"; \
+		kubectl config --kubeconfig $$TGT delete-context k3d-$(K3D_CLUSTER_NAME) 2>/dev/null || true; \
+		kubectl config --kubeconfig $$TGT delete-cluster k3d-$(K3D_CLUSTER_NAME) 2>/dev/null || true; \
+		kubectl config --kubeconfig $$TGT unset users.admin@k3d-$(K3D_CLUSTER_NAME) 2>/dev/null || true; \
+		echo "已清理 $$TGT 中的 k3d 条目"; \
 	fi
 
-kind-kubecfg: ## 打印集群 kubeconfig 路径
-	@echo "$(HOME)/.kube/$(KIND_CLUSTER_NAME).config"
+kind-kubecfg: ## 打印当前 kubeconfig 路径
+	@echo "$(KUBECONFIG_TARGET)"
 
 helm-install: create-kind-cluster ## 创建集群后用 Helm 安装 kagent
 	@echo "=== Helm 安装 kagent ==="
