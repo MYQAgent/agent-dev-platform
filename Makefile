@@ -9,6 +9,7 @@ KIND_CLUSTER_NAME ?= kagent
 K3D_CLUSTER_NAME  ?= $(KIND_CLUSTER_NAME)
 # 0=自动检测空闲端口，可指定如 KIND_API_PORT=8443
 KIND_API_PORT     ?= 0
+K3S_IMAGE         ?= rancher/k3s:v1.37.0-k3s1
 HELM_NAMESPACE    ?= kagent
 KAGENT_VERSION    ?= 1.0.0-alpha3
 
@@ -60,8 +61,10 @@ create-kind-cluster: ## 用 k3d 创建 k3s 集群（Docker 内，开箱即用）
 		echo "目标 kubeconfig: $$TGT，API 端口: $$PORT"; \
 		echo "启动集群，映射端口 127.0.0.1:$${PORT}:6443..."; \
 		k3d cluster create $(K3D_CLUSTER_NAME) \
+			--image $(K3S_IMAGE) \
 			--port 127.0.0.1:$${PORT}:6443@server:0 \
 			--k3s-arg '--disable=traefik@server:0' \
+			--k3s-arg '--kube-apiserver-arg=--runtime-config=certificates.k8s.io/v1beta1=true@server:0' \
 			--kubeconfig-update-default=false || { \
 			echo "k3d 创建失败"; \
 			exit 1; }; \

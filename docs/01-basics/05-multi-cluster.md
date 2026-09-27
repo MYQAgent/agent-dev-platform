@@ -55,7 +55,7 @@ make delete-kind-cluster KIND_CLUSTER_NAME=my-cluster
 
 ## 创建集群 Cluster creation
 
-本平台用 `make create-kind-cluster` 通过 k3d 在 Docker 内创建 k3s 集群。
+本平台用 `make create-kind-cluster` 通过 k3d 在 Docker 内创建 k3s 集群（Kubernetes 1.37+，已启用 `certificates.k8s.io/v1beta1`）。
 
 ### 自定义集群名称
 
