@@ -1,6 +1,6 @@
 ---
-# OpenAI
-# kubectl create secret generic openai-creds --namespace kagent --from-literal=apiKey=sk-xxx
+# DeepSeek（OpenAI 兼容，国内直连）
+# kubectl create secret generic deepseek-creds --namespace kagent --from-literal=apiKey=sk-xxx
 apiVersion: kagent.dev/v1alpha3
 kind: ModelConfig
 metadata:
@@ -8,12 +8,14 @@ metadata:
   namespace: kagent
 spec:
   provider: OpenAI
-  model: gpt-4o
-  apiKeySecret: openai-creds
+  model: deepseek-chat
+  openAI:
+    baseUrl: https://api.deepseek.com/v1
+  apiKeySecret: deepseek-creds
   apiKeySecretKey: apiKey
 ---
-# DeepSeek（OpenAI 兼容，国内直连）
-# kubectl create secret generic deepseek-creds --namespace kagent --from-literal=apiKey=sk-xxx
+# OpenAI
+# kubectl create secret generic openai-creds --namespace kagent --from-literal=apiKey=sk-xxx
 #apiVersion: kagent.dev/v1alpha3
 #kind: ModelConfig
 #metadata:
@@ -21,10 +23,8 @@ spec:
 #  namespace: kagent
 #spec:
 #  provider: OpenAI
-#  model: deepseek-chat
-#  openAI:
-#    baseUrl: https://api.deepseek.com/v1
-#  apiKeySecret: deepseek-creds
+#  model: gpt-4o
+#  apiKeySecret: openai-creds
 #  apiKeySecretKey: apiKey
 ---
 # Ollama（本地，无需 API key）
