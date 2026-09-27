@@ -76,15 +76,7 @@ create-kind-cluster: ## 用 k3d 创建 k3s 集群（Docker 内，开箱即用）
 			'sysctl -w fs.inotify.max_user_instances=1024 fs.inotify.max_user_watches=1048576' >/dev/null 2>&1; \
 		echo "配置 containerd registry 镜像加速..."; \
 		docker exec k3d-$(K3D_CLUSTER_NAME)-server-0 sh -c \
-			'mkdir -p /etc/rancher/k3s && cat > /etc/rancher/k3s/registries.yaml << EOF
-mirrors:
-  docker.io:
-    endpoint:
-      - "https://docker.1ms.run"
-  ghcr.io:
-    endpoint:
-      - "https://ghcr.nju.edu.cn"
-EOF' >/dev/null 2>&1; \
+			'mkdir -p /etc/rancher/k3s && printf "mirrors:\n  docker.io:\n    endpoint:\n      - \"https://docker.1ms.run\"\n  ghcr.io:\n    endpoint:\n      - \"https://ghcr.nju.edu.cn\"\n" > /etc/rancher/k3s/registries.yaml' >/dev/null 2>&1; \
 		echo "重启 k3s 使修复生效..."; \
 		docker restart k3d-$(K3D_CLUSTER_NAME)-server-0 >/dev/null; \
 		echo "等待 k3s 就绪..."; \
