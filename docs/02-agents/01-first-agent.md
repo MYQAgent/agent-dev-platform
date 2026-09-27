@@ -2,6 +2,12 @@
 
 > Create your first agent — Harness + AgentTemplate + ModelConfig，从零到对话。
 
+所有示例 YAML 见 [examples/](examples/) 目录，可直接 apply：
+
+```bash
+kubectl apply -f docs/02-agents/examples/
+```
+
 ---
 
 ## 前置依赖
@@ -49,58 +55,14 @@ kubectl create secret generic deepseek-creds \
   --from-literal=apiKey=sk-your-deepseek-api-key
 ```
 
-然后创建 ModelConfig。选一个你有的 provider：
-
-````yaml tabs
-OpenAI:
-  ```yaml
-  apiVersion: kagent.dev/v1alpha3
-  kind: ModelConfig
-  metadata:
-    name: my-model-config
-    namespace: kagent
-  spec:
-    provider: OpenAI
-    model: gpt-4o
-    apiKeySecret: openai-creds
-    apiKeySecretKey: apiKey
-  ```
-
-DeepSeek（OpenAI 兼容）:
-  ```yaml
-  apiVersion: kagent.dev/v1alpha3
-  kind: ModelConfig
-  metadata:
-    name: my-model-config
-    namespace: kagent
-  spec:
-    provider: OpenAI
-    model: deepseek-chat
-    openAI:
-      baseUrl: https://api.deepseek.com/v1
-    apiKeySecret: deepseek-creds
-    apiKeySecretKey: apiKey
-  ```
-
-Ollama（本地）:
-  ```yaml
-  apiVersion: kagent.dev/v1alpha3
-  kind: ModelConfig
-  metadata:
-    name: my-model-config
-    namespace: kagent
-  spec:
-    provider: Ollama
-    model: qwen2.5:7b
-    ollama:
-      host: http://ollama.kagent.svc:11434
-    apiKeyPassthrough: false
-  ```
-````
+然后创建 ModelConfig。选一个你有的 provider，取消对应 YAML 的注释：
 
 ```bash
-kubectl apply -f modelconfig.yaml
+# 先取消注释你用的 provider，然后 apply
+kubectl apply -f examples/modelconfig.yaml
 ```
+
+文件内容见 [examples/modelconfig.yaml](examples/modelconfig.yaml)（内含 OpenAI / DeepSeek / Ollama 三组配置，用 `---` 分隔）。
 
 ---
 
@@ -108,31 +70,11 @@ kubectl apply -f modelconfig.yaml
 
 Harness 描述 agent「怎么跑」——用什么运行时镜像、跑在哪个 WorkerPool 上、接纳哪些 AgentTemplate。
 
-```yaml
-# harness.yaml
-apiVersion: kagent.dev/v1alpha3
-kind: Harness
-metadata:
-  name: my-harness
-  namespace: kagent
-spec:
-  kagent: {}
-  workload:
-    image: ghcr.io/kagent-dev/kagent/golang-adk@sha256:699c7a36daa0050d5954f42ad3b614690d825664cf64ffe8871dbe20dc68464e
-  substrate:
-    workerPoolRef:
-      name: kagent-default
-    snapshotPolicy:
-      location: s3://ate-snapshots/kagent/
-  allowedAgentTemplates:
-    selector:
-      matchLabels:
-        kagent.dev/harness: my-harness
+```bash
+kubectl apply -f examples/harness.yaml
 ```
 
-```bash
-kubectl apply -f harness.yaml
-```
+完整内容见 [examples/harness.yaml](examples/harness.yaml)。
 
 ---
 
@@ -142,25 +84,11 @@ AgentTemplate 描述 agent「跑什么」——system prompt、引用哪个 Mode
 
 关键：`metadata.labels` 必须匹配 Harness 的 `allowedAgentTemplates.selector`，否则不会被接纳。
 
-```yaml
-# agenttemplate.yaml
-apiVersion: kagent.dev/v1alpha3
-kind: AgentTemplate
-metadata:
-  name: my-first-agent
-  namespace: kagent
-  labels:
-    kagent.dev/harness: my-harness
-spec:
-  description: My first kagent agent
-  modelConfig:
-    name: my-model-config
-  systemPrompt: You are a concise, helpful assistant.
+```bash
+kubectl apply -f examples/agenttemplate.yaml
 ```
 
-```bash
-kubectl apply -f agenttemplate.yaml
-```
+完整内容见 [examples/agenttemplate.yaml](examples/agenttemplate.yaml)。
 
 ---
 
