@@ -45,11 +45,9 @@ create-kind-cluster: ## 用 k3d 创建 k3s 集群（Docker 内，开箱即用）
 		curl -sLo /usr/local/bin/k3d https://github.com/k3d-io/k3d/releases/download/$(K3D_VERSION)/k3d-linux-amd64 && \
 		chmod +x /usr/local/bin/k3d; \
 	fi; \
-	ULIMIT=$$(docker run --rm alpine:latest sh -c 'ulimit -n' 2>/dev/null || echo 1024); \
-	if [ "$$ULIMIT" -lt 65536 ]; then \
-		echo "Docker nofile ulimit=$$ULIMIT（k3s 需要 ≥65536），自动配置..."; \
-		python3 -c 'import json; cfg=json.load(open("/etc/docker/daemon.json")); cfg.setdefault("default-ulimits",{})["nofile"]={"Name":"nofile","Soft":65536,"Hard":131072}; json.dump(cfg,open("/etc/docker/daemon.json","w"),indent=2)' && systemctl restart docker 2>/dev/null; \
-		until docker info >/dev/null 2>&1; do sleep 1; done; \
+	INOTIFY=$$(docker run --rm alpine:latest sh -c 'cat /proc/sys/fs/inotify/max_user_instances 2>/dev/null || echo 128'); \
+	if [ "$$INOTIFY" -lt 1024 ]; then \
+		echo "inotify max_user_instances=$$INOTIFY（k3s 需要 ≥1024），将在容器内自动修复"; \
 	fi; \
 	if k3d cluster list 2>/dev/null | grep -q '^$(K3D_CLUSTER_NAME) '; then \
 		echo "集群 $(K3D_CLUSTER_NAME) 已存在，跳过创建"; \
@@ -65,21 +63,26 @@ create-kind-cluster: ## 用 k3d 创建 k3s 集群（Docker 内，开箱即用）
 			--port 127.0.0.1:$${PORT}:6443@server:0 \
 			--k3s-arg '--disable=traefik@server:0' \
 			--kubeconfig-update-default=false || { \
-			echo "k3d 创建失败（可能此环境不支持嵌套容器化运行 k3s）"; \
-			echo "提示: 当前环境已有 k3s 集群，可用以下命令直接使用："; \
-			echo "  make use-existing-cluster"; \
+			echo "k3d 创建失败"; \
 			exit 1; }; \
-		echo "等待 k3d API 就绪..."; \
-		for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do \
-			if k3d kubeconfig get $(K3D_CLUSTER_NAME) >/dev/null 2>&1; then \
+		echo "修复容器 inotify 限制（CRI 加载需要）..."; \
+		docker exec k3d-$(K3D_CLUSTER_NAME)-server-0 sh -c \
+			'sysctl -w fs.inotify.max_user_instances=1024 fs.inotify.max_user_watches=1048576' >/dev/null 2>&1; \
+		echo "重启 k3s 使修复生效..."; \
+		docker restart k3d-$(K3D_CLUSTER_NAME)-server-0 >/dev/null; \
+		echo "等待 k3s 就绪..."; \
+		for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do \
+			if docker exec k3d-$(K3D_CLUSTER_NAME)-server-0 sh -c \
+				'kubectl get nodes 2>/dev/null | grep -q Ready' >/dev/null 2>&1; then \
+				echo "节点已就绪"; \
 				break; \
 			fi; \
-			if [ "$$i" -eq 15 ]; then \
-				echo "错误: k3d API 未能就绪"; \
+			if [ "$$i" -eq 20 ]; then \
+				echo "错误: 节点未能就绪"; \
 				k3d cluster delete $(K3D_CLUSTER_NAME) >/dev/null 2>&1; \
 				exit 1; \
 			fi; \
-			sleep 2; \
+			sleep 3; \
 		done; \
 		echo "写入 k3d 集群到 $$TGT..."; \
 		K3D_CFG=$$(mktemp); \
@@ -91,21 +94,24 @@ create-kind-cluster: ## 用 k3d 创建 k3s 集群（Docker 内，开箱即用）
 		grep 'certificate-authority-data:' $$K3D_CFG | sed 's/.*certificate-authority-data: //' | base64 -d > $$CA_FILE; \
 		grep 'client-certificate-data:' $$K3D_CFG | sed 's/.*client-certificate-data: //' | base64 -d > $$CERT_FILE; \
 		grep 'client-key-data:' $$K3D_CFG | sed 's/.*client-key-data: //' | base64 -d > $$KEY_FILE; \
-		kubectl config --kubeconfig $$TGT set-cluster k3d-$(K3D_CLUSTER_NAME) \
-			--server=$$SERVER --embed-certs --certificate-authority=$$CA_FILE >/dev/null; \
-		kubectl config --kubeconfig $$TGT set-credentials admin@k3d-$(K3D_CLUSTER_NAME) \
-			--embed-certs --client-certificate=$$CERT_FILE --client-key=$$KEY_FILE >/dev/null; \
-		kubectl config --kubeconfig $$TGT set-context k3d-$(K3D_CLUSTER_NAME) \
-			--cluster=k3d-$(K3D_CLUSTER_NAME) --user=admin@k3d-$(K3D_CLUSTER_NAME) >/dev/null; \
-		kubectl config --kubeconfig $$TGT use-context k3d-$(K3D_CLUSTER_NAME) >/dev/null; \
+		for F in "$$TGT" "/etc/rancher/k3s/k3s.yaml"; do \
+			if [ -f "$$F" ]; then \
+				kubectl config --kubeconfig $$F set-cluster k3d-$(K3D_CLUSTER_NAME) \
+					--server=$$SERVER --embed-certs --certificate-authority=$$CA_FILE >/dev/null; \
+				kubectl config --kubeconfig $$F set-credentials admin@k3d-$(K3D_CLUSTER_NAME) \
+					--embed-certs --client-certificate=$$CERT_FILE --client-key=$$KEY_FILE >/dev/null; \
+				kubectl config --kubeconfig $$F set-context k3d-$(K3D_CLUSTER_NAME) \
+					--cluster=k3d-$(K3D_CLUSTER_NAME) --user=admin@k3d-$(K3D_CLUSTER_NAME) >/dev/null; \
+				kubectl config --kubeconfig $$F use-context k3d-$(K3D_CLUSTER_NAME) >/dev/null; \
+			fi; \
+		done; \
 		rm -f $$K3D_CFG $$CA_FILE $$CERT_FILE $$KEY_FILE; \
 		echo ""; \
 		echo "=== 集群就绪: $(K3D_CLUSTER_NAME) ==="; \
-		sleep 5; \
 		kubectl cluster-info; \
 		echo ""; \
 		echo "=== 集群验证 ==="; \
-		kubectl get nodes -o wide 2>&1 || echo "（节点未就绪，可以等几秒再试）"; \
+		kubectl get nodes -o wide; \
 		echo ""; \
 		echo "# 切换集群:"; \
 		echo "  kubectl config use-context k3d-$(K3D_CLUSTER_NAME)   # 切到 k3d"; \
