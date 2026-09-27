@@ -3,6 +3,7 @@
 
 .PHONY: help docs docs-http docs-mkdocs docs-vitepress docs-github
 .PHONY: create-kind-cluster delete-kind-cluster kind-kubecfg helm-install use-existing-cluster
+.PHONY: install-kubectl-ate install-substrate install-kagent
 
 PORT              ?= 3080
 KIND_CLUSTER_NAME ?= kagent
@@ -12,6 +13,8 @@ KIND_API_PORT     ?= 0
 K3S_IMAGE         ?= rancher/k3s:v1.37.0-k3s1
 HELM_NAMESPACE    ?= kagent
 KAGENT_VERSION    ?= 1.0.0-alpha3
+SUBSTRATE_VERSION ?= 0.2.0-beta5
+MODEL_PROVIDER    ?= openAI
 
 # 写入目标：设了 $KUBECONFIG 则用它，否则默认 ~/.kube/config
 KUBECONFIG_OUT ?= $(if $(KUBECONFIG),$(firstword $(subst :, ,$(KUBECONFIG))),$(HOME)/.kube/config)
@@ -162,15 +165,112 @@ delete-kind-cluster: ## 删除 k3d 集群并清理 kubeconfig
 kind-kubecfg: ## 打印当前 kubeconfig 路径
 	@echo "$(KUBECONFIG_OUT)"
 
-helm-install: create-kind-cluster ## 创建集群后用 Helm 安装 kagent
-	@echo "=== Helm 安装 kagent ==="
-	@kubectl create namespace $(HELM_NAMESPACE) --dry-run=client -o yaml | kubectl apply -f -
-	helm upgrade --install kagent-crds \
-		oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
+# ──────────────────────────────────────────────
+# kagent 安装（依赖 create-kind-cluster）
+# ──────────────────────────────────────────────
+
+SUBSTRATE_CHART      ?= oci://ghcr.io/kagent-dev/substrate/helm/substrate
+SUBSTRATE_CRDS_CHART ?= oci://ghcr.io/kagent-dev/substrate/helm/substrate-crds
+KAGENT_CHART         ?= oci://ghcr.io/kagent-dev/kagent/helm/kagent
+KAGENT_CRDS_CHART    ?= oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds
+
+install-kubectl-ate: ## 安装 kubectl-ate（Substrate CLI）
+	@if ! command -v kubectl-ate >/dev/null 2>&1; then \
+		echo "安装 kubectl-ate $(SUBSTRATE_VERSION)..."; \
+		UNAME_S=$$(uname -s | tr '[:upper:]' '[:lower:]'); \
+		UNAME_M=$$(uname -m | sed 's/x86_64/amd64/; s/aarch64/arm64/'); \
+		curl -fsSL -o /usr/local/bin/kubectl-ate \
+			"https://github.com/kagent-dev/substrate/releases/download/v$(SUBSTRATE_VERSION)/kubectl-ate-$${UNAME_S}-$${UNAME_M}"; \
+		chmod +x /usr/local/bin/kubectl-ate; \
+		echo "kubectl-ate 已安装"; \
+	fi
+
+install-substrate: create-kind-cluster install-kubectl-ate ## 安装 Agent Substrate
+	@echo "=== 安装 Agent Substrate ==="; \
+	ATE_NS=ate-system; \
+	echo "1/5 安装 Substrate CRDs..."; \
+	helm upgrade --install substrate-crds $(SUBSTRATE_CRDS_CHART) \
+		--version $(SUBSTRATE_VERSION) \
+		--namespace $$ATE_NS --create-namespace --wait >/dev/null; \
+	echo "2/5 安装 Substrate 控制面（第一遍）..."; \
+	helm upgrade --install substrate $(SUBSTRATE_CHART) \
+		--version $(SUBSTRATE_VERSION) \
+		--namespace $$ATE_NS --create-namespace \
+		--set 'credentialProvider.namespacePolicies[0].atespace=$(HELM_NAMESPACE)' \
+		--set 'credentialProvider.namespacePolicies[0].allowedNamespaces[0]=$(HELM_NAMESPACE)' >/dev/null; \
+	echo "3/5 创建 identity 材料（CA/JWT pools）..."; \
+	kubectl ate admin make-ca-pool --ca-id=1 \
+		--name=service-dns-ca-pool \
+		--secret-namespace=podcertificate-controller-system >/dev/null 2>&1; \
+	kubectl ate admin make-ca-pool --ca-id=1 \
+		--name=pod-identity-ca-pool \
+		--secret-namespace=podcertificate-controller-system >/dev/null 2>&1; \
+	kubectl ate admin make-jwt-pool --key-id=1 \
+		--name=actor-id-jwt-pool \
+		--secret-namespace=$$ATE_NS >/dev/null 2>&1; \
+	kubectl ate admin make-ca-pool --ca-id=1 \
+		--name=actor-id-ca-pool \
+		--secret-namespace=$$ATE_NS >/dev/null 2>&1; \
+	kubectl ate admin make-ca-pool --ca-id=1 \
+		--name=egress-mitm-ca-pool \
+		--secret-namespace=$$ATE_NS --key-type=ECDSAP256 >/dev/null 2>&1; \
+	echo "4/5 提取 actor 根证书并配置认证..."; \
+	ACTOR_CA_ROOT=$$(kubectl get secret actor-id-ca-pool -n $$ATE_NS \
+		-o jsonpath='{.data.pool}' | base64 --decode \
+		| jq -r '.CAs[0].RootCertificateDER' | base64 --decode \
+		| openssl x509 -inform der -outform pem); \
+	kubectl create secret generic actor-id-ca-certs -n $$ATE_NS \
+		--from-literal=ca.crt="$${ACTOR_CA_ROOT}" --dry-run=client -o yaml | kubectl apply -f - >/dev/null; \
+	K8S_ISSUER=$$(kubectl get --raw /.well-known/openid-configuration | jq -r .issuer); \
+	AUTH_CFG=$$(mktemp); \
+	printf 'actorIdentityJWTProvider: kubernetes\njwtProviders:\n- name: kubernetes\n  issuer: %s\n  audiences: [api.%s.svc]\n  certificateAuthorityFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt\n  discoveryTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token\n' \
+		"$$K8S_ISSUER" "$$ATE_NS" > $$AUTH_CFG; \
+	kubectl create configmap ate-api-authentication -n $$ATE_NS \
+		--from-file=authentication.yaml=$$AUTH_CFG --dry-run=client -o yaml | kubectl apply -f - >/dev/null; \
+	rm -f $$AUTH_CFG; \
+	echo "5/5 滚动 Substrate 使 identity 生效..."; \
+	helm upgrade substrate $(SUBSTRATE_CHART) \
+		--version $(SUBSTRATE_VERSION) \
+		--namespace $$ATE_NS --reuse-values --wait --timeout 10m >/dev/null; \
+	echo "Agent Substrate 已就绪"; \
+	kubectl get pods -n $$ATE_NS 2>&1 | head -12
+
+install-kagent: ## 安装 kagent controller + UI
+	@echo "=== 安装 kagent ==="; \
+	if [ -z "$${OPENAI_API_KEY}" ] && [ -z "$${DEEPSEEK_API_KEY}" ]; then \
+		echo "错误: 请设置模型 provider API key 环境变量"; \
+		echo "  export OPENAI_API_KEY=sk-..."; \
+		echo "  export DEEPSEEK_API_KEY=sk-..."; \
+		exit 1; \
+	fi; \
+	PROVIDER_KEY=$${OPENAI_API_KEY:-$$DEEPSEEK_API_KEY}; \
+	echo "1/2 安装 kagent CRDs..."; \
+	helm upgrade --install kagent-crds $(KAGENT_CRDS_CHART) \
 		--version $(KAGENT_VERSION) \
-		--namespace $(HELM_NAMESPACE) --create-namespace
-	helm upgrade --install kagent \
-		oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+		--namespace $(HELM_NAMESPACE) --create-namespace --wait >/dev/null; \
+	echo "2/2 安装 kagent..."; \
+	helm upgrade --install kagent $(KAGENT_CHART) \
 		--version $(KAGENT_VERSION) \
-		--namespace $(HELM_NAMESPACE) \
-		--values platform/helm/kagent/values.yaml
+		--namespace $(HELM_NAMESPACE) --create-namespace --timeout 10m \
+		--set 'providers.default=$(MODEL_PROVIDER)' \
+		--set 'providers.$(MODEL_PROVIDER).apiKey=$${PROVIDER_KEY}' \
+		--values platform/helm/kagent/values.yaml >/dev/null; \
+	echo "等待 kagent 就绪..."; \
+	kubectl rollout status deployment/kagent-controller -n $(HELM_NAMESPACE) --timeout=300s >/dev/null 2>&1 || true; \
+	kubectl get pods -n $(HELM_NAMESPACE)
+
+helm-install: install-substrate install-kagent ## 完整安装：Substrate → kagent
+	@echo "=== 安装完成 ==="; \
+	echo ""; \
+	echo "kagent 控制器:"; \
+	kubectl get pods -n $(HELM_NAMESPACE) -l app.kubernetes.io/component=controller; \
+	echo ""; \
+	echo "WorkerPool:"; \
+	kubectl get workerpools -n $(HELM_NAMESPACE); \
+	echo ""; \
+	echo "# 打开 UI:"; \
+	echo "  kubectl port-forward -n $(HELM_NAMESPACE) svc/kagent-ui 8082:8080"; \
+	echo "  http://localhost:8082"; \
+	echo ""; \
+	echo "# 控制器 gRPC API:"; \
+	echo "  kubectl port-forward -n $(HELM_NAMESPACE) svc/kagent-controller 8083:8083"
