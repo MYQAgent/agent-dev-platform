@@ -7,15 +7,18 @@
 ## 核心命令 Core commands
 
 ```bash
+# 统一 kubeconfig（kubectl / helm / kustomize 全部对齐）
+export KUBECONFIG=$HOME/.kube/config
+
 # 1. 建 k3d 集群（默认名称 kagent）
 make create-kind-cluster
 
 #    自定义集群名称
 make create-kind-cluster KIND_CLUSTER_NAME=my-cluster
 
-#    切换集群上下文（创建后自动切到 k3d 集群，切回宿主用）
-kubectl config use-context default                   # 切回宿主（k3s）
+#    切换集群上下文
 kubectl config use-context k3d-my-cluster            # 切到 k3d
+kubectl config use-context default                   # 切回宿主
 
 # 2. 设模型 provider 与 key
 ## 方案 A：OpenAI
@@ -57,7 +60,7 @@ make helm-install             setup-cluster.sh（10 步）
 
 ## 前置依赖 Prerequisites
 
-- Docker（k3d 自动安装）/ kubectl / Helm
+- Docker（k3d 自动安装）/ kubectl / Helm / `export KUBECONFIG=$HOME/.kube/config`
 - 一个模型 API key（OpenAI / Anthropic / Gemini / Ollama 任选）
 
 > 注意：`make` 命令来自 kagent 源码仓库的 Makefile。若你不 clone kagent 仓库，也可直接用 Helm 命令等价安装（见下）。

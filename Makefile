@@ -12,15 +12,8 @@ KIND_API_PORT     ?= 0
 HELM_NAMESPACE    ?= kagent
 KAGENT_VERSION    ?= 1.0.0-alpha3
 
-# 自动检测 kubectl 当前读的 kubeconfig 文件
-KUBECONFIG_TARGET ?= $(shell \
-  if [ -n "$$KUBECONFIG" ]; then echo "$${KUBECONFIG%%:*}"; \
-  elif [ -L "$$(command -v kubectl)" ] && \
-       [ "$$(readlink -f $$(command -v kubectl))" = "/usr/local/bin/k3s" ]; then \
-    echo "/etc/rancher/k3s/k3s.yaml"; \
-  else \
-    echo "$$(HOME)/.kube/config"; \
-  fi)
+# 写入目标：设了 $KUBECONFIG 则用它，否则默认 ~/.kube/config
+KUBECONFIG_OUT ?= $(if $(KUBECONFIG),$(firstword $(subst :, ,$(KUBECONFIG))),$(HOME)/.kube/config)
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  %-14s %s\n", $$1, $$2}'
@@ -61,7 +54,7 @@ create-kind-cluster: ## 用 k3d 创建 k3s 集群（Docker 内，开箱即用）
 	if k3d cluster list 2>/dev/null | grep -q '^$(K3D_CLUSTER_NAME) '; then \
 		echo "集群 $(K3D_CLUSTER_NAME) 已存在，跳过创建"; \
 	else \
-		TGT="$(KUBECONFIG_TARGET)"; \
+		TGT="$(KUBECONFIG_OUT)"; \
 		PORT="$(KIND_API_PORT)"; \
 		if [ "$$PORT" = "0" ]; then \
 			PORT=$$(python3 -c 'import socket; s=socket.socket(); s.bind(("",0)); print(s.getsockname()[1]); s.close()'); \
@@ -145,7 +138,7 @@ use-existing-cluster: ## 使用已有的 k3s 集群
 delete-kind-cluster: ## 删除 k3d 集群并清理 kubeconfig
 	@echo "=== 删除集群: $(K3D_CLUSTER_NAME) ==="; \
 	k3d cluster delete $(K3D_CLUSTER_NAME) 2>/dev/null || true; \
-	TGT="$(KUBECONFIG_TARGET)"; \
+	TGT="$(KUBECONFIG_OUT)"; \
 	if [ -f "$$TGT" ]; then \
 		CURRENT=$$(kubectl config --kubeconfig $$TGT current-context 2>/dev/null); \
 		if [ "$$CURRENT" = "k3d-$(K3D_CLUSTER_NAME)" ]; then \
@@ -158,7 +151,7 @@ delete-kind-cluster: ## 删除 k3d 集群并清理 kubeconfig
 	fi
 
 kind-kubecfg: ## 打印当前 kubeconfig 路径
-	@echo "$(KUBECONFIG_TARGET)"
+	@echo "$(KUBECONFIG_OUT)"
 
 helm-install: create-kind-cluster ## 创建集群后用 Helm 安装 kagent
 	@echo "=== Helm 安装 kagent ==="
