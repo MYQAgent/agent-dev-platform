@@ -47,28 +47,20 @@ kubectl port-forward --address 0.0.0.0 -n kagent svc/kagent-ui 8082:8080
 
 ## Step 1：配置 LLM（ModelConfig）
 
-Agent 需要一个 LLM 后端。创建 ModelConfig 前，先创建保存 API key 的 Secret：
+Agent 需要一个 LLM 后端。先创建保存 API key 的 Secret，再创建 ModelConfig：
 
 ```bash
-# OpenAI
-kubectl create secret generic openai-creds \
-  --namespace kagent \
-  --from-literal=apiKey=sk-your-openai-api-key
-
-# 或 DeepSeek
+# 创建 Secret（以 DeepSeek 为例）
 kubectl create secret generic deepseek-creds \
   --namespace kagent \
   --from-literal=apiKey=sk-your-deepseek-api-key
-```
 
-然后创建 ModelConfig。选一个你有的 provider，取消对应 YAML 的注释：
-
-```bash
-# 先取消注释你用的 provider，然后 apply
+# 创建 ModelConfig（选一个 provider，取消注释后 apply）
 kubectl apply -f examples/modelconfig.yaml
 ```
 
-文件内容见 [examples/modelconfig.yaml](examples/modelconfig.yaml)（内含 OpenAI / DeepSeek / Ollama 三组配置，用 `---` 分隔）。
+> ModelConfig 介绍详见 [04-model-config.md](04-model-config.md)。  
+> 示例文件见 [examples/modelconfig.yaml](examples/modelconfig.yaml)（内含 OpenAI / DeepSeek / Ollama 三组配置，用 `---` 分隔）。
 
 ---
 
@@ -94,7 +86,8 @@ AgentTemplate 描述 agent「跑什么」——system prompt、引用哪个 Mode
 kubectl apply -f examples/agenttemplate.yaml
 ```
 
-完整内容见 [examples/agenttemplate.yaml](examples/agenttemplate.yaml)。
+> AgentTemplate 详细介绍详见 [03-agent-template.md](03-agent-template.md)。  
+> 示例文件见 [examples/agenttemplate.yaml](examples/agenttemplate.yaml)。
 
 ---
 

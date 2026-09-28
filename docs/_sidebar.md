@@ -10,6 +10,8 @@
 * Agents
   * [创建第一个 agent](02-agents/01-first-agent.md)
   * [Harness 四种 adapter](02-agents/02-harness.md)
+  * [AgentTemplate 定义](02-agents/03-agent-template.md)
+  * [ModelConfig 配置](02-agents/04-model-config.md)
 
 * Skills
   * [Agent Plugins 格式](03-skills/01-skill-format.md)
