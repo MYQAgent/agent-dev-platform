@@ -3,7 +3,7 @@
 
 .PHONY: help docs docs-http docs-mkdocs docs-vitepress docs-github
 .PHONY: create-kind-cluster delete-kind-cluster kind-kubecfg helm-install use-existing-cluster
-.PHONY: install-kubectl-ate install-substrate install-kagent
+.PHONY: install-kubectl-ate install-substrate install-kagent mirror
 
 PORT              ?= 3080
 KIND_CLUSTER_NAME ?= kagent
@@ -164,6 +164,9 @@ delete-kind-cluster: ## 删除 k3d 集群并清理 kubeconfig
 		kubectl config --kubeconfig $$TGT unset users.admin@k3d-$(K3D_CLUSTER_NAME) 2>/dev/null || true; \
 		echo "已清理 $$TGT 中的 k3d 条目"; \
 	fi
+
+mirror: ## 配置国内镜像加速（tools/mirror.sh）
+	@bash tools/mirror.sh
 
 kind-kubecfg: ## 打印当前 kubeconfig 路径
 	@echo "$(KUBECONFIG_OUT)"

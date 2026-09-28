@@ -16,6 +16,9 @@ kubectl apply -f docs/02-agents/examples/
 - 一个模型 API key（OpenAI / DeepSeek / Ollama 任选）
 - `export KUBECONFIG=$HOME/.kube/config`
 
+> **国内网络用户**：ghcr.io / registry.k8s.io 可能访问慢或不可达。
+> 请先执行 `bash tools/mirror.sh` 配置镜像加速，详见 [network-guide.md](../01-basics/05-network-guide.md)。
+
 ```bash
 # 建集群
 make create-kind-cluster

@@ -46,6 +46,19 @@ kagent version
 
 ---
 
+## 网络准备 Network preparation
+
+国内网络访问 ghcr.io / registry.k8s.io 等源可能极慢或不可达，请先执行镜像加速：
+
+```bash
+# 一键配置国内镜像加速
+bash tools/mirror.sh
+```
+
+或手动配置（见 [05-network-guide.md](05-network-guide.md)）。
+
+---
+
 ## 其他前置依赖 Other prerequisites
 
 仅当你要**运行** agent（而非只写 skill）时才需要：

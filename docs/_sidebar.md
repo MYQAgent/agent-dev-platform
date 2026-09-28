@@ -5,6 +5,7 @@
   * [安装 kagent + kmcp](01-basics/02-install.md)
   * [v2 架构](01-basics/03-architecture.md)
   * [多集群管理](01-basics/04-multi-cluster.md)
+  * [国内镜像加速](01-basics/05-network-guide.md)
 
 * Agents
   * [创建第一个 agent](02-agents/01-first-agent.md)
