@@ -75,14 +75,8 @@ create-k3d-cluster: ## 用 k3d 创建 k3s 集群，内置 registry（Docker 内�
 		echo "修复容器 inotify 限制（CRI 加载需要）..."; \
 		docker exec k3d-$(K3D_CLUSTER_NAME)-server-0 sh -c \
 			'sysctl -w fs.inotify.max_user_instances=1024 fs.inotify.max_user_watches=1048576' >/dev/null 2>&1; \
-		echo "配置 containerd 镜像加速（国内源 + 内置 registry）..."; \
-		printf 'mirrors:\n  localhost:5000:\n    endpoint:\n      - "http://k3d-$(K3D_CLUSTER_NAME)-registry:5000"\n  docker.io:\n    endpoint:\n      - "https://docker.1ms.run"\n  ghcr.io:\n    endpoint:\n      - "https://ghcr.nju.edu.cn"\n  registry.k8s.io:\n    endpoint:\n      - "https://docker.1ms.run"\n' > /tmp/k3d-registries.yaml; \
-		docker cp /tmp/k3d-registries.yaml k3d-$(K3D_CLUSTER_NAME)-server-0:/etc/rancher/k3s/registries.yaml; \
-		rm -f /tmp/k3d-registries.yaml; \
-		echo "重启 k3s 使修复生效..."; \
-		docker restart k3d-$(K3D_CLUSTER_NAME)-server-0 >/dev/null; \
-		echo "等待 k3s 就绪..."; \
-		for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do \
+		echo "验证集群就绪..."; \
+		for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do \
 			if docker exec k3d-$(K3D_CLUSTER_NAME)-server-0 sh -c \
 				'kubectl get nodes 2>/dev/null | grep -q Ready' >/dev/null 2>&1; then \
 				echo "节点已就绪"; \
