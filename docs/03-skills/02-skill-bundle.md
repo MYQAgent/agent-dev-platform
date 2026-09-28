@@ -2,6 +2,10 @@
 
 > Package skills as OCI and reference them from AgentTemplate.
 
+> **统一镜像源说明**：本指南所有示例使用 `localhost:5000` 作为演示 registry。  
+> 你只需 `docker run -d -p 5000:5000 --name registry registry:2` 即可启动。  
+> 生产环境请替换为你的实际 registry 地址（如 ghcr.io、阿里云 ACR、自建 Harbor）。
+
 > **前置依赖**：`oras`、`skills-ref`、`jq`，安装方法见 [00-toolchain.md](00-toolchain.md)。
 
 ---
@@ -9,15 +13,17 @@
 ## 核心命令 Core commands
 
 ```bash
+# 0. 启动本地演示 registry（如已运行可跳过）
+docker run -d --restart=always -p 5000:5000 --name registry registry:2
+
 # 1. 校验
 npx skills-ref validate ./skills/k8s-knowledge
 
-# 2. 打包 skill 目录为 OCI 并推送
-#    （用任意 OCI 工具，示例用 oras 或 flux operator）
-oras push ghcr.io/my-org/k8s-skills:v0.1.0 ./skills
+# 2. 打包 skill 目录为 OCI 并推送到本地 registry
+oras push localhost:5000/my-org/k8s-skills:0.1.0 ./skills
 
 # 3. 获取 digest
-oras manifest fetch ghcr.io/my-org/k8s-skills:v0.1.0 | jq -r '.digest'
+oras manifest fetch localhost:5000/my-org/k8s-skills:0.1.0 | jq -r '.digest'
 
 # 4. 在 AgentTemplate 中引用 digest
 kubectl apply -f agenttemplate.yaml
@@ -57,7 +63,7 @@ kagent runtime 拉取 + 校验 + 加载 skill
 skills:
   - name: k8s-knowledge
     source:
-      oci: "ghcr.io/my-org/k8s-skills@sha256:64位digest"
+      oci: "localhost:5000/my-org/k8s-skills@sha256:64位digest"
 
 # 2. Git（完整 commit）
 skills:
@@ -93,7 +99,7 @@ skills:
 spec:
   plugins:
     - source:
-        oci: "ghcr.io/my-org/k8s-skills@sha256:..."
+        oci: "localhost:5000/my-org/k8s-skills@sha256:..."
       skills: ["k8s-knowledge", "k8s-troubleshoot"]
 ```
 
@@ -101,17 +107,17 @@ spec:
 
 ---
 
-## 本地开发便利路径 Local dev shortcut
+## 开发调试：用 tag 快速迭代
 
-本地 registry（`localhost:5001`）供开发调试，避免每次推公共 registry：
+开发阶段可以用 tag 代替 digest 减少操作步骤：
 
 ```bash
-# 推本地 registry
-oras push localhost:5001/k8s-skills:dev ./skills
+# 推 tag（开发用）
+oras push localhost:5000/my-org/k8s-skills:dev ./skills
 
-# AgentTemplate 引用
+# AgentTemplate 引用 tag（开发）
 source:
-  oci: "localhost:5001/k8s-skills:dev"
+  oci: "localhost:5000/my-org/k8s-skills:dev"
 ```
 
 > 生产环境**必须用 digest 引用**（`@sha256:...`），tag 可被覆盖导致内容漂移。

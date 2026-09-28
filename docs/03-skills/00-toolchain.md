@@ -2,6 +2,30 @@
 
 > 构建和发布 skill 需要的 CLI 工具。
 
+> **统一镜像源说明**：本指南所有示例使用 `localhost:5000` 作为演示 registry。  
+> 你只需 `docker run -d -p 5000:5000 --name registry registry:2` 即可启动本地 registry，跟着示例完整跑通。  
+> 生产环境请替换为你的实际 registry 地址（如 ghcr.io、阿里云 ACR、自建 Harbor）。
+
+---
+
+## 自建本地演示 registry
+
+一行命令启动：
+
+```bash
+docker run -d --restart=always -p 5000:5000 --name registry registry:2
+```
+
+验证：
+
+```bash
+curl http://localhost:5000/v2/
+# 输出: {}
+```
+
+> 所有后续示例的 `localhost:5000` 都指向这个 registry。用完可删：
+> `docker rm -f registry`
+
 ---
 
 ## oras — OCI artifact 工具
@@ -40,23 +64,24 @@ oras version
 
 ```bash
 # 推送 skill 目录为 OCI artifact
-oras push ghcr.io/my-org/k8s-skills:0.1.0 ./skills
+oras push localhost:5000/my-org/k8s-skills:0.1.0 ./skills
 
 # 拉取 OCI artifact 到本地
-oras pull ghcr.io/my-org/k8s-skills@sha256:<digest>
+oras pull localhost:5000/my-org/k8s-skills@sha256:<digest>
 
 # 查看 artifact 的 digest
-oras manifest fetch ghcr.io/my-org/k8s-skills:0.1.0 | jq -r '.digest'
+oras manifest fetch localhost:5000/my-org/k8s-skills:0.1.0 | jq -r '.digest'
 # 输出: sha256:699c7a36daa00...
 
 # 列出仓库中的 tag
-oras repo tags ghcr.io/my-org/k8s-skills
+oras repo tags localhost:5000/my-org/k8s-skills
 ```
 
 ### 登录 registry
 
 ```bash
-# 需要认证的 registry（如 ghcr.io）
+# 登录本地 registry（无需认证）
+# 登录远程 registry（如 ghcr.io）
 oras login ghcr.io -u <用户名>
 # 输入 Personal Access Token 作为密码
 ```
@@ -116,10 +141,10 @@ jq --version
 
 ```bash
 # 从 oras manifest 中提取 digest
-oras manifest fetch ghcr.io/my-org/k8s-skills:0.1.0 | jq -r '.digest'
+oras manifest fetch localhost:5000/my-org/k8s-skills:0.1.0 | jq -r '.digest'
 
 # 验证 Docker 镜像 digest
-docker inspect ghcr.io/my-org/custom-agent:0.1.0 | jq -r '.[0].RepoDigests[0]'
+docker inspect localhost:5000/my-org/custom-agent:0.1.0 | jq -r '.[0].RepoDigests[0]'
 ```
 
 ---

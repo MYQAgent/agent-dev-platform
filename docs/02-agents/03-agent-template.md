@@ -2,6 +2,10 @@
 
 > AgentTemplate describes what an agent does — prompt, skills, tools, and plugins.
 
+> **统一镜像源说明**：本指南所有示例使用 `localhost:5000` 作为演示 registry。  
+> 你只需 `docker run -d -p 5000:5000 --name registry registry:2` 即可启动。  
+> 生产环境请替换为你的实际 registry 地址（如 ghcr.io、阿里云 ACR、自建 Harbor）。
+
 ---
 
 ## 一句话理解
@@ -45,10 +49,10 @@ spec:
   skills:                        # 引用的技能（OCI/git/S3）
     - name: k8s-knowledge
       source:
-        oci: ghcr.io/my-org/k8s-skills@sha256:<digest>
+        oci: localhost:5000/my-org/k8s-skills@sha256:<digest>
     - name: k8s-troubleshoot
       source:
-        oci: ghcr.io/my-org/k8s-skills@sha256:<digest>
+        oci: localhost:5000/my-org/k8s-skills@sha256:<digest>
 
   tools:                         # MCP 工具绑定
     - mcp:
@@ -59,7 +63,7 @@ spec:
 
   plugins:                       # 可选：plugin bundle
     - source:
-        oci: ghcr.io/my-org/my-plugin@sha256:<digest>
+        oci: localhost:5000/my-org/my-plugin@sha256:<digest>
       skills: ["my-skill"]
 ```
 
@@ -139,10 +143,10 @@ spec:
   skills:
     - name: k8s-knowledge
       source:
-        oci: "ghcr.io/example/k8s-skills@sha256:REPLACE_WITH_DIGEST"
+        oci: "localhost:5000/my-org/k8s-skills@sha256:REPLACE_WITH_DIGEST"
     - name: k8s-troubleshoot
       source:
-        oci: "ghcr.io/example/k8s-skills@sha256:REPLACE_WITH_DIGEST"
+        oci: "localhost:5000/my-org/k8s-skills@sha256:REPLACE_WITH_DIGEST"
   tools:
     - mcp:
         server:

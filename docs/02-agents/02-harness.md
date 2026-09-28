@@ -2,6 +2,11 @@
 
 > The four Harness adapters: kagent / Codex / Claude / BYO.
 
+> **统一镜像源说明**：本指南所有示例使用 `localhost:5000` 作为演示 registry。  
+> 你只需 `docker run -d -p 5000:5000 --name registry registry:2` 即可启动。  
+> 官方运行镜像（golang-adk 等）来自 ghcr.io/kagent-dev/，国内用户见镜像加速指南。  
+> 生产环境请替换为你的实际 registry 地址。
+
 ---
 
 ## 一句话理解
@@ -94,21 +99,29 @@ workload:
 
 自己写 Dockerfile，实现 A2A 协议契约，然后在 Harness 中指定：
 
+```bash
+# 构建并推送到本地 registry
+docker build -t localhost:5000/my-org/custom-agent:0.1.0 .
+docker push localhost:5000/my-org/custom-agent:0.1.0
+# 获取 digest
+docker inspect localhost:5000/my-org/custom-agent:0.1.0 | jq -r '.[0].RepoDigests[0]'
+```
+
 ```yaml
 spec:
   byo: {}
   workload:
-    image: ghcr.io/my-org/custom-agent@sha256:<digest>
+    image: localhost:5000/my-org/custom-agent@sha256:<digest>
     command: ["/app/agent"]
 ```
 
 ### 区分概念：Skill OCI 制品 ≠ 容器镜像
 
 ```
-Skill OCI 制品：   oras push ghcr.io/my-org/k8s-skills:0.1.0 ./skills
+Skill OCI 制品：   oras push localhost:5000/my-org/k8s-skills:0.1.0 ./skills
                   → 这是发布 skill 内容（SKILL.md + scripts）
                   → 工具链：oras / skills-ref / jq，安装见 03-skills/00-toolchain.md
-容器镜像：         docker build -t my-agent . && docker push
+容器镜像：         docker build -t localhost:5000/my-org/custom-agent:0.1.0 . && docker push
                   → 这是构建运行时环境（仅 byo 需要）
 ```
 
