@@ -6,7 +6,7 @@ metadata:
 spec:
   kagent: {}
   workload:
-    image: ghcr.io/kagent-dev/kagent/golang-adk@sha256:REPLACE_WITH_DIGEST
+    image: ghcr.io/kagent-dev/kagent/golang-adk@sha256:699c7a36daa0050d5954f42ad3b614690d825664cf64ffe8871dbe20dc68464e
   substrate:
     workerPoolRef:
       name: kagent-default
