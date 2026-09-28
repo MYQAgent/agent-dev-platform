@@ -23,7 +23,7 @@
 
 ```bash
 # Linux amd64
-curl -fsSL https://github.com/oras-project/oras/releases/download/v1.2.2/oras_1.2.2_linux_amd64.tar.gz \
+curl -fsSL https://github.com/oras-project/oras/releases/download/v1.3.4/oras_1.3.4_linux_amd64.tar.gz \
   | tar -xz -C /usr/local/bin oras
 chmod +x /usr/local/bin/oras
 
@@ -34,7 +34,7 @@ brew install oras
 oras version
 ```
 
-> 其他平台和版本见 [oras 官方发布页](https://github.com/oras-project/oras/releases)。
+> 其他平台和版本见 [oras 官方发布页](https://github.com/oras-project/oras/releases/tag/v1.3.4)。
 
 ### 常用命令
 
@@ -128,7 +128,7 @@ docker inspect ghcr.io/my-org/custom-agent:0.1.0 | jq -r '.[0].RepoDigests[0]'
 
 | 工具 | 版本 | 用途 | 安装验证 |
 |------|------|------|---------|
-| `oras` | >= 1.2.2 | OCI artifact 推送/拉取 | `oras version` |
+| `oras` | >= 1.3.4 | OCI artifact 推送/拉取 | `oras version` |
 | `skills-ref` | latest | SKILL.md 校验 | `npx skills-ref --help` |
 | `jq` | >= 1.6 | JSON 提取 digest | `jq --version` |
 
