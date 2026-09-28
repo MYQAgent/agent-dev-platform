@@ -62,9 +62,10 @@ create-kind-cluster: ## 用 k3d 创建 k3s 集群（Docker 内，开箱即用）
 			PORT=$$(python3 -c 'import socket; s=socket.socket(); s.bind(("",0)); print(s.getsockname()[1]); s.close()'); \
 		fi; \
 		echo "目标 kubeconfig: $$TGT，API 端口: $$PORT"; \
-		echo "启动集群，映射端口 127.0.0.1:$${PORT}:6443..."; \
+		echo "启动集群，内置 registry（宿主机 localhost:5000 = 集群内 k3d-$(K3D_CLUSTER_NAME)-registry:5000）..."; \
 		k3d cluster create $(K3D_CLUSTER_NAME) \
 			--image $(K3S_IMAGE) \
+			--registry-create k3d-$(K3D_CLUSTER_NAME)-registry:0.0.0.0:5000 \
 			--port 127.0.0.1:$${PORT}:6443@server:0 \
 			--k3s-arg '--disable=traefik@server:0' \
 			--k3s-arg '--kube-apiserver-arg=--runtime-config=certificates.k8s.io/v1beta1=true@server:0' \
@@ -74,9 +75,24 @@ create-kind-cluster: ## 用 k3d 创建 k3s 集群（Docker 内，开箱即用）
 		echo "修复容器 inotify 限制（CRI 加载需要）..."; \
 		docker exec k3d-$(K3D_CLUSTER_NAME)-server-0 sh -c \
 			'sysctl -w fs.inotify.max_user_instances=1024 fs.inotify.max_user_watches=1048576' >/dev/null 2>&1; \
-		echo "配置 containerd registry 镜像加速..."; \
+		echo "配置 containerd 镜像加速（国内源 + 内置 registry）..."; \
+		RNAME="k3d-$(K3D_CLUSTER_NAME)-registry"; \
 		docker exec k3d-$(K3D_CLUSTER_NAME)-server-0 sh -c \
-			'mkdir -p /etc/rancher/k3s && printf "mirrors:\n  docker.io:\n    endpoint:\n      - \"https://docker.1ms.run\"\n  ghcr.io:\n    endpoint:\n      - \"https://ghcr.nju.edu.cn\"\n" > /etc/rancher/k3s/registries.yaml' >/dev/null 2>&1; \
+			'cat > /etc/rancher/k3s/registries.yaml <<-EOF
+mirrors:
+  localhost:5000:
+    endpoint:
+      - "http://'"$$RNAME"':5000"
+  docker.io:
+    endpoint:
+      - "https://docker.1ms.run"
+  ghcr.io:
+    endpoint:
+      - "https://ghcr.nju.edu.cn"
+  registry.k8s.io:
+    endpoint:
+      - "https://docker.1ms.run"
+EOF'; \
 		echo "重启 k3s 使修复生效..."; \
 		docker restart k3d-$(K3D_CLUSTER_NAME)-server-0 >/dev/null; \
 		echo "等待 k3s 就绪..."; \
@@ -127,6 +143,11 @@ create-kind-cluster: ## 用 k3d 创建 k3s 集群（Docker 内，开箱即用）
 		echo "  kubectl config use-context default                    # 切回宿主"; \
 		echo ""; \
 		echo "# 删除: make delete-kind-cluster KIND_CLUSTER_NAME=$(KIND_CLUSTER_NAME)"; \
+		echo ""; \
+		echo "# 内置 registry:"; \
+		echo "  localhost:5000 = 集群内 k3d-$(K3D_CLUSTER_NAME)-registry:5000（自动配置）"; \
+		echo "  oras push localhost:5000/my-image:tag ./dir"; \
+		echo "  docker push localhost:5000/my-image:tag"; \
 	fi
 
 use-existing-cluster: ## 使用已有的 k3s 集群

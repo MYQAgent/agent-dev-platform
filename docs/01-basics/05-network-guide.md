@@ -3,7 +3,7 @@
 > 解决 ghcr.io / registry.k8s.io 等源在国内访问慢或不可达的问题。
 
 > **统一镜像源策略**：本指南所有文档的示例代码统一使用 `localhost:5000` 作为演示 registry。  
-> 一行命令启动：`docker run -d -p 5000:5000 --name registry registry:2`。  
+> `make create-kind-cluster` 会自动内置 registry，`localhost:5000` = 集群内 `k3d-kagent-registry:5000`。  
 > 官方镜像（golang-adk 等）来自 ghcr.io/kagent-dev/，需要通过下方方案加速拉取。  
 > 生产环境请将 `localhost:5000` 替换为你的实际 registry 地址。
 
@@ -106,7 +106,7 @@ kubectl delete pod -n ate-system -l app=atelet --force --grace-period=0
 
 ## 方案 C：本地 registry 全量缓存
 
-将集群所需的所有镜像推送到本地 registry，所有节点从本地拉取：
+`make create-kind-cluster` 已内置 registry（`localhost:5000` → `k3d-kagent-registry:5000`），以下步骤仅在需要手动缓存时使用：
 
 ```bash
 # 1. 启动本地 registry

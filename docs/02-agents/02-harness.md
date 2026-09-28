@@ -3,7 +3,7 @@
 > The four Harness adapters: kagent / Codex / Claude / BYO.
 
 > **统一镜像源说明**：本指南所有示例使用 `localhost:5000` 作为演示 registry。  
-> 你只需 `docker run -d -p 5000:5000 --name registry registry:2` 即可启动。  
+> 使用 `make create-kind-cluster` 创建集群时会自动内置 registry。  
 > 官方运行镜像（golang-adk 等）来自 ghcr.io/kagent-dev/，国内用户见镜像加速指南。  
 > 生产环境请替换为你的实际 registry 地址。
 

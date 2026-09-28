@@ -3,17 +3,18 @@
 > 构建和发布 skill 需要的 CLI 工具。
 
 > **统一镜像源说明**：本指南所有示例使用 `localhost:5000` 作为演示 registry。  
-> 你只需 `docker run -d -p 5000:5000 --name registry registry:2` 即可启动本地 registry，跟着示例完整跑通。  
+> 使用 `make create-kind-cluster` 创建集群时会自动内置 registry，无需额外启动。  
 > 生产环境请替换为你的实际 registry 地址（如 ghcr.io、阿里云 ACR、自建 Harbor）。
 
 ---
 
 ## 自建本地演示 registry
 
-一行命令启动：
+推荐使用 `make create-kind-cluster` 创建集群，它会自动启动内置 registry：
 
-```bash
-docker run -d --restart=always -p 5000:5000 --name registry registry:2
+```
+宿主机 push:  docker push localhost:5000/image     ← 直接用
+k3d 内部拉取: containerd → k3d-kagent-registry:5000  ← 自动配置，无需关心
 ```
 
 验证：
@@ -23,8 +24,7 @@ curl http://localhost:5000/v2/
 # 输出: {}
 ```
 
-> 所有后续示例的 `localhost:5000` 都指向这个 registry。用完可删：
-> `docker rm -f registry`
+> 如果不用 k3d，可单独启动：`docker run -d -p 5000:5000 --name registry registry:2`。
 
 ---
 
