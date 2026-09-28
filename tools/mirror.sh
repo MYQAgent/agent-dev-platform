@@ -1,14 +1,12 @@
 #!/bin/bash
 # ============================
 # myqagent 国内镜像加速脚本
-# 配置 containerd 镜像加速 + 推送到国内 registry
+# 1) 拉取 kagent / Substrate 官方镜像
+# 2) 推送到 k3d 内置 registry（localhost:5000）
+# 3) （可选）配置 atelet 代理
+# 无需写 registries.yaml（已由 make create-kind-cluster 处理）
 # ============================
 set -euo pipefail
-
-# ── 国内镜像地址配置 ──
-DOCKER_MIRROR="https://docker.1ms.run"
-GHCR_MIRROR="https://ghcr.nju.edu.cn"
-K8S_MIRROR="https://docker.1ms.run"
 
 # 需要拉取并推送的镜像列表（ghcr.io 直连慢的）
 IMAGES_GHCR=(
@@ -50,19 +48,7 @@ check_k3d() {
   info "k3d 集群运行中"
 }
 
-# ── 1. 配置 containerd registries.yaml ──
-setup_registries() {
-  echo ""
-  echo "━━━━━ 配置 containerd 镜像加速 ━━━━━"
-  echo ""
-  docker exec k3d-kagent-server-0 sh -c \
-    "printf 'mirrors:\n  docker.io:\n    endpoint:\n      - \"${DOCKER_MIRROR}\"\n  ghcr.io:\n    endpoint:\n      - \"${GHCR_MIRROR}\"\n  registry.k8s.io:\n    endpoint:\n      - \"${K8S_MIRROR}\"\n' > /etc/rancher/k3s/registries.yaml"
-  info "registries.yaml 已写入"
-  docker exec k3d-kagent-server-0 sh -c 'cat /etc/rancher/k3s/registries.yaml'
-}
-
-# ── 2. 启用代理拉取（可选）──
-setup_proxy() {
+# ── 代理配置（可选）──
   if [ -n "${HTTP_PROXY:-}" ] || [ -n "${http_proxy:-}" ]; then
     PROXY="${HTTP_PROXY:-${http_proxy}}"
     echo ""
@@ -81,13 +67,13 @@ EOF"
   fi
 }
 
-# ── 3. 拉取 + 推送镜像到本地 registry ──
+# ── 1. 拉取 + 推送镜像到 k3d 内置 registry ──
 mirror_images() {
   echo ""
   echo "━━━━━ 拉取并推送镜像 ━━━━━"
   echo ""
 
-  GW_REGISTRY="172.29.0.1:5000"
+  GW_REGISTRY="localhost:5000"
   local_pull=0
 
   for img in "${IMAGES_GHCR[@]}"; do
@@ -145,10 +131,10 @@ mirror_images() {
   done
 
   echo ""
-  info "共推送 ${local_pull} 个镜像到本地 registry"
+  info "共推送 ${local_pull} 个镜像到 k3d 内置 registry（localhost:5000）"
 }
 
-# ── 4. 重启 k3s ──
+# ── 2. 重启 k3s ──
 restart_k3s() {
   echo ""
   echo "━━━━━ 重启 k3s ━━━━━"
@@ -167,7 +153,7 @@ restart_k3s() {
   echo ""; error "集群未能就绪"; exit 1
 }
 
-# ── 5. atelet 代理配置 ──
+# ── 3. atelet 代理配置 ──
 setup_atelet_proxy() {
   if [ -n "${HTTP_PROXY:-}" ] || [ -n "${http_proxy:-}" ]; then
     PROXY="${HTTP_PROXY:-${http_proxy}}"
@@ -189,8 +175,6 @@ setup_atelet_proxy() {
 # ── 主流程 ──
 main() {
   check_k3d
-  setup_registries
-  setup_proxy
   mirror_images
   restart_k3s
   setup_atelet_proxy
@@ -199,7 +183,8 @@ main() {
   echo -e "${GREEN}  国内镜像加速配置完成${NC}"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo ""
-  echo "后续 Helm 安装时自动走国内镜像源，无需额外配置。"
+  echo "所有官方镜像已推送到 k3d 内置 registry（localhost:5000）"
+  echo "后续 Helm 安装时自动从内置 registry 拉取，无需额外配置。"
   echo "执行: make helm-install"
 }
 
