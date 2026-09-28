@@ -252,13 +252,6 @@ install-substrate: create-k3d-cluster install-kubectl-ate ## 安装 Agent Substr
 
 install-kagent: ## 安装 kagent controller + UI
 	@echo "=== 安装 kagent ==="; \
-	if [ -z "$${OPENAI_API_KEY}" ] && [ -z "$${DEEPSEEK_API_KEY}" ]; then \
-		echo "错误: 请设置模型 provider API key 环境变量"; \
-		echo "  export OPENAI_API_KEY=sk-..."; \
-		echo "  export DEEPSEEK_API_KEY=sk-..."; \
-		exit 1; \
-	fi; \
-	PROVIDER_KEY=$${OPENAI_API_KEY:-$$DEEPSEEK_API_KEY}; \
 	echo "1/2 安装 kagent CRDs..."; \
 	helm upgrade --install kagent-crds $(KAGENT_CRDS_CHART) \
 		--version $(KAGENT_VERSION) \
@@ -267,8 +260,6 @@ install-kagent: ## 安装 kagent controller + UI
 	helm upgrade --install kagent $(KAGENT_CHART) \
 		--version $(KAGENT_VERSION) \
 		--namespace $(HELM_NAMESPACE) --create-namespace --timeout 10m \
-		--set 'providers.default=$(MODEL_PROVIDER)' \
-		--set 'providers.$(MODEL_PROVIDER).apiKey=$${PROVIDER_KEY}' \
 		--values platform/helm/kagent/values.yaml >/dev/null; \
 	echo "等待 kagent 就绪..."; \
 	kubectl rollout status deployment/kagent-controller -n $(HELM_NAMESPACE) --timeout=300s >/dev/null 2>&1 || true; \
