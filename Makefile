@@ -76,23 +76,9 @@ create-k3d-cluster: ## 用 k3d 创建 k3s 集群，内置 registry（Docker 内�
 		docker exec k3d-$(K3D_CLUSTER_NAME)-server-0 sh -c \
 			'sysctl -w fs.inotify.max_user_instances=1024 fs.inotify.max_user_watches=1048576' >/dev/null 2>&1; \
 		echo "配置 containerd 镜像加速（国内源 + 内置 registry）..."; \
-		RNAME="k3d-$(K3D_CLUSTER_NAME)-registry"; \
-		docker exec k3d-$(K3D_CLUSTER_NAME)-server-0 sh -c \
-			'cat > /etc/rancher/k3s/registries.yaml <<-EOF
-mirrors:
-  localhost:5000:
-    endpoint:
-      - "http://'"$$RNAME"':5000"
-  docker.io:
-    endpoint:
-      - "https://docker.1ms.run"
-  ghcr.io:
-    endpoint:
-      - "https://ghcr.nju.edu.cn"
-  registry.k8s.io:
-    endpoint:
-      - "https://docker.1ms.run"
-EOF'; \
+		printf 'mirrors:\n  localhost:5000:\n    endpoint:\n      - "http://k3d-$(K3D_CLUSTER_NAME)-registry:5000"\n  docker.io:\n    endpoint:\n      - "https://docker.1ms.run"\n  ghcr.io:\n    endpoint:\n      - "https://ghcr.nju.edu.cn"\n  registry.k8s.io:\n    endpoint:\n      - "https://docker.1ms.run"\n' > /tmp/k3d-registries.yaml; \
+		docker cp /tmp/k3d-registries.yaml k3d-$(K3D_CLUSTER_NAME)-server-0:/etc/rancher/k3s/registries.yaml; \
+		rm -f /tmp/k3d-registries.yaml; \
 		echo "重启 k3s 使修复生效..."; \
 		docker restart k3d-$(K3D_CLUSTER_NAME)-server-0 >/dev/null; \
 		echo "等待 k3s 就绪..."; \
