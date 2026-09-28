@@ -2,14 +2,14 @@
 # 文档查看与常用命令统一入口。Run `make help` for available targets.
 
 .PHONY: help docs docs-http docs-mkdocs docs-vitepress docs-github
-.PHONY: create-kind-cluster delete-kind-cluster kind-kubecfg helm-install use-existing-cluster
+.PHONY: create-k3d-cluster delete-k3d-cluster k3d-kubecfg helm-install use-existing-cluster
+.PHONY: create-kind-cluster delete-kind-cluster kind-kubecfg
 .PHONY: install-kubectl-ate install-substrate install-kagent mirror
 
 PORT              ?= 3080
-KIND_CLUSTER_NAME ?= kagent
-K3D_CLUSTER_NAME  ?= $(KIND_CLUSTER_NAME)
-# 0=自动检测空闲端口，可指定如 KIND_API_PORT=8443
-KIND_API_PORT     ?= 0
+K3D_CLUSTER_NAME  ?= kagent
+# 0=自动检测空闲端口，可指定如 K3D_API_PORT=8443
+K3D_API_PORT      ?= 0
 K3S_IMAGE         ?= rancher/k3s:v1.37.0-k3s1
 HELM_NAMESPACE    ?= kagent
 KAGENT_VERSION    ?= 1.0.0-alpha3
@@ -42,7 +42,7 @@ docs-github: ## 提示：推送到 GitHub 后原生渲染
 
 K3D_VERSION ?= v5.8.3
 
-create-kind-cluster: ## 用 k3d 创建 k3s 集群（Docker 内，开箱即用）
+create-k3d-cluster: ## 用 k3d 创建 k3s 集群，内置 registry（Docker 内，开箱即用）
 	@echo "=== 创建 k3d 集群: $(K3D_CLUSTER_NAME) ==="; \
 	if ! command -v k3d >/dev/null 2>&1; then \
 		echo "安装 k3d $(K3D_VERSION)..."; \
@@ -57,7 +57,7 @@ create-kind-cluster: ## 用 k3d 创建 k3s 集群（Docker 内，开箱即用）
 		echo "集群 $(K3D_CLUSTER_NAME) 已存在，跳过创建"; \
 	else \
 		TGT="$(KUBECONFIG_OUT)"; \
-		PORT="$(KIND_API_PORT)"; \
+		PORT="$(K3D_API_PORT)"; \
 		if [ "$$PORT" = "0" ]; then \
 			PORT=$$(python3 -c 'import socket; s=socket.socket(); s.bind(("",0)); print(s.getsockname()[1]); s.close()'); \
 		fi; \
@@ -142,7 +142,7 @@ EOF'; \
 		echo "  kubectl config use-context k3d-$(K3D_CLUSTER_NAME)   # 切到 k3d"; \
 		echo "  kubectl config use-context default                    # 切回宿主"; \
 		echo ""; \
-		echo "# 删除: make delete-kind-cluster KIND_CLUSTER_NAME=$(KIND_CLUSTER_NAME)"; \
+		echo "# 删除: make delete-k3d-cluster K3D_CLUSTER_NAME=$(K3D_CLUSTER_NAME)"; \
 		echo ""; \
 		echo "# 内置 registry:"; \
 		echo "  localhost:5000 = 集群内 k3d-$(K3D_CLUSTER_NAME)-registry:5000（自动配置）"; \
@@ -168,10 +168,10 @@ use-existing-cluster: ## 使用已有的 k3s 集群
 		kubectl cluster-info; \
 	else \
 		echo "未检测到已有集群，请先安装 Kubernetes"; \
-		echo "可尝试: make create-kind-cluster"; \
+		echo "可尝试: make create-k3d-cluster"; \
 	fi
 
-delete-kind-cluster: ## 删除 k3d 集群并清理 kubeconfig
+delete-k3d-cluster: ## 删除 k3d 集群并清理 kubeconfig
 	@echo "=== 删除集群: $(K3D_CLUSTER_NAME) ==="; \
 	k3d cluster delete $(K3D_CLUSTER_NAME) 2>/dev/null || true; \
 	TGT="$(KUBECONFIG_OUT)"; \
@@ -186,10 +186,15 @@ delete-kind-cluster: ## 删除 k3d 集群并清理 kubeconfig
 		echo "已清理 $$TGT 中的 k3d 条目"; \
 	fi
 
+# ── 兼容旧名 ──
+create-kind-cluster: create-k3d-cluster
+delete-kind-cluster: delete-k3d-cluster
+kind-kubecfg: k3d-kubecfg
+
 mirror: ## 配置国内镜像加速（tools/mirror.sh）
 	@bash tools/mirror.sh
 
-kind-kubecfg: ## 打印当前 kubeconfig 路径
+k3d-kubecfg: ## 打印当前 kubeconfig 路径
 	@echo "$(KUBECONFIG_OUT)"
 
 # ──────────────────────────────────────────────
@@ -212,7 +217,7 @@ install-kubectl-ate: ## 安装 kubectl-ate（Substrate CLI）
 		echo "kubectl-ate 已安装"; \
 	fi
 
-install-substrate: create-kind-cluster install-kubectl-ate ## 安装 Agent Substrate
+install-substrate: create-k3d-cluster install-kubectl-ate ## 安装 Agent Substrate
 	@echo "=== 安装 Agent Substrate ==="; \
 	ATE_NS=ate-system; \
 	echo "1/5 安装 Substrate CRDs..."; \

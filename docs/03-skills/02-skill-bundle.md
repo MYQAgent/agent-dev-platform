@@ -3,7 +3,7 @@
 > Package skills as OCI and reference them from AgentTemplate.
 
 > **统一镜像源说明**：本指南所有示例使用 `localhost:5000` 作为演示 registry。  
-> 使用 `make create-kind-cluster` 创建集群时会自动内置 registry，无需额外启动。  
+> 使用 `make create-k3d-cluster` 创建集群时会自动内置 registry，无需额外启动。  
 > 生产环境请替换为你的实际 registry 地址（如 ghcr.io、阿里云 ACR、自建 Harbor）。
 
 > **前置依赖**：`oras`、`skills-ref`、`jq`，安装方法见 [00-toolchain.md](00-toolchain.md)。
@@ -13,8 +13,8 @@
 ## 核心命令 Core commands
 
 ```bash
-# 0. 检查 registry（make create-kind-cluster 已内置，无需启动）
-curl http://localhost:5000/v2/ 2>/dev/null || echo "registry 未运行，请执行 make create-kind-cluster"
+# 0. 检查 registry（make create-k3d-cluster 已内置，无需启动）
+curl http://localhost:5000/v2/ 2>/dev/null || echo "registry 未运行，请执行 make create-k3d-cluster"
 
 # 1. 校验
 npx skills-ref validate ./skills/k8s-knowledge

@@ -25,7 +25,7 @@
 系统 SHALL 提供消费者视角的「官方镜像 + Helm 一条命令」跑通流程。
 
 #### Scenario: 快速体验
-- **WHEN** 读者用官方镜像执行 make create-kind-cluster + helm-install
+- **WHEN** 读者用官方镜像执行 make create-k3d-cluster + helm-install
 - **THEN** 无需自行编译即可通过 UI 与 agent 对话
 
 ### Requirement: 本地一键预览文档

@@ -3,7 +3,7 @@
 > AgentTemplate describes what an agent does — prompt, skills, tools, and plugins.
 
 > **统一镜像源说明**：本指南所有示例使用 `localhost:5000` 作为演示 registry。  
-> 使用 `make create-kind-cluster` 创建集群时会自动内置 registry。  
+> 使用 `make create-k3d-cluster` 创建集群时会自动内置 registry。  
 > 生产环境请替换为你的实际 registry 地址（如 ghcr.io、阿里云 ACR、自建 Harbor）。
 
 ---

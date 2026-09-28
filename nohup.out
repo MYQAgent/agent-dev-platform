@@ -1,0 +1,81 @@
+117.28.190.172 - - [26/Sep/2026 21:16:44] "GET / HTTP/1.1" 200 -
+117.28.190.172 - - [26/Sep/2026 21:16:44] code 404, message File not found
+117.28.190.172 - - [26/Sep/2026 21:16:44] "GET /01-basics/_sidebar.md HTTP/1.1" 404 -
+117.28.190.172 - - [26/Sep/2026 21:16:53] "GET / HTTP/1.1" 304 -
+117.28.190.172 - - [26/Sep/2026 21:16:54] code 404, message File not found
+117.28.190.172 - - [26/Sep/2026 21:16:54] "GET /01-basics/_sidebar.md HTTP/1.1" 404 -
+117.28.190.172 - - [26/Sep/2026 21:17:04] code 404, message File not found
+117.28.190.172 - - [26/Sep/2026 21:17:04] "GET /01-basics/_sidebar.md HTTP/1.1" 404 -
+117.28.190.172 - - [26/Sep/2026 21:17:31] "GET / HTTP/1.1" 304 -
+117.28.190.172 - - [26/Sep/2026 21:17:31] code 404, message File not found
+117.28.190.172 - - [26/Sep/2026 21:17:31] "GET /01-basics/_sidebar.md HTTP/1.1" 404 -
+80.66.83.75 - - [27/Sep/2026 13:51:29] code 400, message Bad HTTP/0.9 request type ('\\x03\\x00\\x00/*à\\x00\\x00\\x00\\x00\\x00Cookie:')
+80.66.83.75 - - [27/Sep/2026 13:51:29] "\x03\x00\x00/*à\x00\x00\x00\x00\x00Cookie: mstshash=Administr" 400 -
+80.66.83.75 - - [27/Sep/2026 14:58:08] code 400, message Bad HTTP/0.9 request type ('\\x03\\x00\\x00/*à\\x00\\x00\\x00\\x00\\x00Cookie:')
+80.66.83.75 - - [27/Sep/2026 14:58:08] "\x03\x00\x00/*à\x00\x00\x00\x00\x00Cookie: mstshash=Administr" 400 -
+91.196.152.87 - - [27/Sep/2026 17:48:43] code 400, message Bad request version ('À#À¬À®À+À')
+91.196.152.87 - - [27/Sep/2026 17:48:43] "\x16\x03\x03\x02`\x01\x00\x02\\\x03\x03ß+Jýr°¶\x96:<qëd\x18±j?\x15\x03?2ò«3³M\x1d\x0e»òÆ3 7\x91ëâ\x03\x0e2§¨ÿk1ÉÇ,óM\x19\x84!ÿ\x07\x1a\x87\x96<\x86":µ\x14$\x00\x8a\x00\x16\x003\x00gÀ\x9eÀ¢\x00\x9e\x009\x00kÀ\x9fÀ£\x00\x9f\x00E\x00¾\x00\x88\x00Ä\x00\x9aÀ\x08À\x09À#À¬À®À+À" 400 -
+91.196.152.83 - - [27/Sep/2026 17:48:47] "GET / HTTP/1.1" 200 -
+91.196.152.57 - - [27/Sep/2026 17:52:18] code 404, message File not found
+91.196.152.57 - - [27/Sep/2026 17:52:18] "GET /favicon.ico HTTP/1.1" 404 -
+87.251.64.131 - - [28/Sep/2026 01:24:08] code 400, message Bad request version ("îø\\x91\\x8d\\x00\\\\\\x13\\x02\\x13\\x03\\x13\\x01À,À0Ì©Ì¨À¯À\\xadÀ]ÀaÀ+À/À®À¬À\\\\À`À$À(ÀsÀwÀ#À'ÀrÀvÀ")
+87.251.64.131 - - [28/Sep/2026 01:24:08] "\x16\x03\x01\x02\x00\x01\x00\x01ü\x03\x03\x89]ë-ß\x99Ì)ó\x8cIê\x17w^ãkô´\x83íd\x0es\x90\x0d\x18\x0dløÊ¬ ÓÓÁÛ\x8aä\x17´îÿ\x042\x8fúï\x9bí\x90\x96\x17\x06]C\x8aÞ4\x8c\x85îø\x91\x8d\x00\\\x13\x02\x13\x03\x13\x01À,À0Ì©Ì¨À¯À­À]ÀaÀ+À/À®À¬À\\À`À$À(ÀsÀwÀ#À'ÀrÀvÀ" 400 -
+87.251.64.131 - - [28/Sep/2026 01:24:08] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [28/Sep/2026 16:50:57] "GET /02-agents/02-harness.md HTTP/1.1" 200 -
+192.168.1.221 - - [28/Sep/2026 16:51:11] "GET / HTTP/1.1" 200 -
+192.168.1.221 - - [28/Sep/2026 16:51:13] "GET /01-basics/01-write-skill.md HTTP/1.1" 200 -
+192.168.1.221 - - [28/Sep/2026 16:51:13] code 404, message File not found
+192.168.1.221 - - [28/Sep/2026 16:51:13] "GET /01-basics/_sidebar.md HTTP/1.1" 404 -
+192.168.1.221 - - [28/Sep/2026 16:51:13] "GET /_sidebar.md HTTP/1.1" 200 -
+192.168.1.221 - - [28/Sep/2026 16:51:13] "GET /README.md HTTP/1.1" 200 -
+192.168.1.221 - - [28/Sep/2026 16:51:13] "GET /01-basics/02-install.md HTTP/1.1" 200 -
+192.168.1.221 - - [28/Sep/2026 16:51:13] "GET /01-basics/03-architecture.md HTTP/1.1" 200 -
+192.168.1.221 - - [28/Sep/2026 16:51:13] "GET /01-basics/04-multi-cluster.md HTTP/1.1" 200 -
+192.168.1.221 - - [28/Sep/2026 16:51:13] "GET /01-basics/05-network-guide.md HTTP/1.1" 200 -
+192.168.1.221 - - [28/Sep/2026 16:51:13] "GET /02-agents/01-first-agent.md HTTP/1.1" 200 -
+192.168.1.221 - - [28/Sep/2026 16:51:13] "GET /02-agents/02-harness.md HTTP/1.1" 200 -
+192.168.1.221 - - [28/Sep/2026 16:51:13] "GET /03-skills/01-skill-format.md HTTP/1.1" 200 -
+192.168.1.221 - - [28/Sep/2026 16:51:13] "GET /03-skills/02-skill-bundle.md HTTP/1.1" 200 -
+192.168.1.221 - - [28/Sep/2026 16:51:13] "GET /03-skills/03-mcp-integration.md HTTP/1.1" 200 -
+192.168.1.221 - - [28/Sep/2026 16:51:13] "GET /03-skills/04-testing.md HTTP/1.1" 200 -
+192.168.1.221 - - [28/Sep/2026 16:51:13] "GET /03-idp/01-cluster-setup.md HTTP/1.1" 200 -
+192.168.1.221 - - [28/Sep/2026 16:51:13] "GET /03-idp/02-pipelines.md HTTP/1.1" 200 -
+192.168.1.221 - - [28/Sep/2026 16:51:13] "GET /04-best-practices/migration.md HTTP/1.1" 200 -
+192.168.1.221 - - [28/Sep/2026 16:51:13] "GET /03-idp/03-governance.md HTTP/1.1" 200 -
+192.168.1.221 - - [28/Sep/2026 16:51:13] "GET /04-best-practices/security.md HTTP/1.1" 200 -
+192.168.1.221 - - [28/Sep/2026 16:51:13] "GET /03-idp/04-multi-team.md HTTP/1.1" 200 -
+192.168.1.221 - - [28/Sep/2026 16:51:13] "GET /04-best-practices/skill-design.md HTTP/1.1" 200 -
+192.168.1.221 - - [28/Sep/2026 16:51:13] code 404, message File not found
+192.168.1.221 - - [28/Sep/2026 16:51:13] "GET /favicon.ico HTTP/1.1" 404 -
+192.168.1.221 - - [28/Sep/2026 16:51:19] code 404, message File not found
+192.168.1.221 - - [28/Sep/2026 16:51:19] "GET /01-basics/_sidebar.md HTTP/1.1" 404 -
+192.168.1.221 - - [28/Sep/2026 16:51:23] "GET /02-agents/02-harness.md HTTP/1.1" 304 -
+192.168.1.221 - - [28/Sep/2026 16:51:23] code 404, message File not found
+192.168.1.221 - - [28/Sep/2026 16:51:23] "GET /02-agents/_sidebar.md HTTP/1.1" 404 -
+192.168.1.221 - - [28/Sep/2026 16:56:58] code 404, message File not found
+192.168.1.221 - - [28/Sep/2026 16:56:58] "GET /02-agents/_sidebar.md HTTP/1.1" 404 -
+192.168.1.221 - - [28/Sep/2026 16:59:22] "GET / HTTP/1.1" 304 -
+192.168.1.221 - - [28/Sep/2026 16:59:23] code 404, message File not found
+192.168.1.221 - - [28/Sep/2026 16:59:23] "GET /02-agents/_sidebar.md HTTP/1.1" 404 -
+192.168.1.221 - - [28/Sep/2026 16:59:25] code 404, message File not found
+192.168.1.221 - - [28/Sep/2026 16:59:25] "GET /01-basics/_sidebar.md HTTP/1.1" 404 -
+192.168.1.221 - - [28/Sep/2026 16:59:26] code 404, message File not found
+192.168.1.221 - - [28/Sep/2026 16:59:26] "GET /01-basics/_sidebar.md HTTP/1.1" 404 -
+192.168.1.221 - - [28/Sep/2026 16:59:27] code 404, message File not found
+192.168.1.221 - - [28/Sep/2026 16:59:27] "GET /01-basics/_sidebar.md HTTP/1.1" 404 -
+192.168.1.221 - - [28/Sep/2026 17:00:09] "GET / HTTP/1.1" 304 -
+192.168.1.221 - - [28/Sep/2026 17:00:09] code 404, message File not found
+192.168.1.221 - - [28/Sep/2026 17:00:09] "GET /01-basics/_sidebar.md HTTP/1.1" 404 -
+192.168.1.221 - - [28/Sep/2026 17:00:15] code 404, message File not found
+192.168.1.221 - - [28/Sep/2026 17:00:15] "GET /01-basics/_sidebar.md HTTP/1.1" 404 -
+192.168.1.221 - - [28/Sep/2026 17:00:18] "GET /02-agents/02-harness.md HTTP/1.1" 200 -
+192.168.1.221 - - [28/Sep/2026 17:00:18] code 404, message File not found
+192.168.1.221 - - [28/Sep/2026 17:00:18] "GET /02-agents/_sidebar.md HTTP/1.1" 404 -
+192.168.1.221 - - [28/Sep/2026 17:00:23] "GET / HTTP/1.1" 304 -
+192.168.1.221 - - [28/Sep/2026 17:00:23] "GET /02-agents/02-harness.md HTTP/1.1" 304 -
+192.168.1.221 - - [28/Sep/2026 17:00:23] code 404, message File not found
+192.168.1.221 - - [28/Sep/2026 17:00:23] "GET /02-agents/_sidebar.md HTTP/1.1" 404 -
+192.168.1.221 - - [28/Sep/2026 17:00:40] "GET / HTTP/1.1" 304 -
+192.168.1.221 - - [28/Sep/2026 17:00:40] "GET /02-agents/02-harness.md HTTP/1.1" 304 -
+192.168.1.221 - - [28/Sep/2026 17:00:40] code 404, message File not found
+192.168.1.221 - - [28/Sep/2026 17:00:40] "GET /02-agents/_sidebar.md HTTP/1.1" 404 -

@@ -37,10 +37,10 @@ kubectl --kubeconfig ~/.kube/kagent.config get nodes
 export KUBECONFIG=$HOME/.kube/config
 
 # 创建（默认名称 kagent）
-make create-kind-cluster
+make create-k3d-cluster
 
 # 自定义名称
-make create-kind-cluster KIND_CLUSTER_NAME=my-cluster
+make create-k3d-cluster K3D_CLUSTER_NAME=my-cluster
 
 # 切换集群上下文
 kubectl config use-context k3d-my-cluster            # 切到 k3d
@@ -48,26 +48,26 @@ kubectl config use-context default                   # 切回宿主
 
 # 删除（自动清理 context）
 make delete-kind-cluster
-make delete-kind-cluster KIND_CLUSTER_NAME=my-cluster
+make delete-kind-cluster K3D_CLUSTER_NAME=my-cluster
 ```
 
 ---
 
 ## 创建集群 Cluster creation
 
-本平台用 `make create-kind-cluster` 通过 k3d 在 Docker 内创建 k3s 集群（Kubernetes 1.37+，已启用 `certificates.k8s.io/v1beta1`）。
+本平台用 `make create-k3d-cluster` 通过 k3d 在 Docker 内创建 k3s 集群（Kubernetes 1.37+，已启用 `certificates.k8s.io/v1beta1`）。
 
 ### 自定义集群名称
 
 ```bash
 export KUBECONFIG=$HOME/.kube/config   # 一次设定，所有工具对齐
-make create-kind-cluster
-make create-kind-cluster KIND_CLUSTER_NAME=my-cluster
+make create-k3d-cluster
+make create-k3d-cluster K3D_CLUSTER_NAME=my-cluster
 ```
 
 名称会影响以下内容：
 
-| 字段 | `KIND_CLUSTER_NAME=kagent` | `KIND_CLUSTER_NAME=my-cluster` |
+| 字段 | `K3D_CLUSTER_NAME=kagent` | `K3D_CLUSTER_NAME=my-cluster` |
 |------|---------------------------|-------------------------------|
 | 集群 context | `k3d-kagent` | `k3d-my-cluster` |
 | 容器名 | `k3d-kagent-server-0` | `k3d-my-cluster-server-0` |
@@ -95,7 +95,7 @@ helm list --namespace kagent
 ### 删除集群
 
 ```bash
-make delete-kind-cluster KIND_CLUSTER_NAME=my-cluster
+make delete-kind-cluster K3D_CLUSTER_NAME=my-cluster
 ```
 
 ---

@@ -18,11 +18,11 @@ kubectl apply -f docs/02-agents/examples/
 
 > **国内网络用户**：ghcr.io / registry.k8s.io 可能访问慢或不可达。  
 > 请先执行 `bash tools/mirror.sh` 配置镜像加速，详见 [network-guide.md](../01-basics/05-network-guide.md)。  
-> `make create-kind-cluster` 会自动内置本地 registry（`localhost:5000`），所有示例直接使用。
+> `make create-k3d-cluster` 会自动内置本地 registry（`localhost:5000`），所有示例直接使用。
 
 ```bash
 # 建集群
-make create-kind-cluster
+make create-k3d-cluster
 
 # 设 API key（以 OpenAI 为例）
 export KAGENT_DEFAULT_MODEL_PROVIDER=OpenAI

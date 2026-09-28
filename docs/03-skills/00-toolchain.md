@@ -3,14 +3,14 @@
 > 构建和发布 skill 需要的 CLI 工具。
 
 > **统一镜像源说明**：本指南所有示例使用 `localhost:5000` 作为演示 registry。  
-> 使用 `make create-kind-cluster` 创建集群时会自动内置 registry，无需额外启动。  
+> 使用 `make create-k3d-cluster` 创建集群时会自动内置 registry，无需额外启动。  
 > 生产环境请替换为你的实际 registry 地址（如 ghcr.io、阿里云 ACR、自建 Harbor）。
 
 ---
 
 ## 自建本地演示 registry
 
-推荐使用 `make create-kind-cluster` 创建集群，它会自动启动内置 registry：
+推荐使用 `make create-k3d-cluster` 创建集群，它会自动启动内置 registry：
 
 ```
 宿主机 push:  docker push localhost:5000/image     ← 直接用
