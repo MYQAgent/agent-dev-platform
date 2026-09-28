@@ -160,17 +160,20 @@ use-existing-cluster: ## 使用已有的 k3s 集群
 delete-k3d-cluster: ## 删除 k3d 集群并清理 kubeconfig
 	@echo "=== 删除集群: $(K3D_CLUSTER_NAME) ==="; \
 	k3d cluster delete $(K3D_CLUSTER_NAME) 2>/dev/null || true; \
-	TGT="$(KUBECONFIG_OUT)"; \
-	if [ -f "$$TGT" ]; then \
-		CURRENT=$$(kubectl config --kubeconfig $$TGT current-context 2>/dev/null); \
+	cleanup_kubeconfig() { \
+		local f="$$1"; \
+		if [ ! -f "$$f" ]; then return; fi; \
+		CURRENT=$$(kubectl config --kubeconfig $$f current-context 2>/dev/null); \
 		if [ "$$CURRENT" = "k3d-$(K3D_CLUSTER_NAME)" ]; then \
-			kubectl config --kubeconfig $$TGT use-context default >/dev/null 2>&1 || true; \
+			kubectl config --kubeconfig $$f use-context default >/dev/null 2>&1 || true; \
 		fi; \
-		kubectl config --kubeconfig $$TGT delete-context k3d-$(K3D_CLUSTER_NAME) 2>/dev/null || true; \
-		kubectl config --kubeconfig $$TGT delete-cluster k3d-$(K3D_CLUSTER_NAME) 2>/dev/null || true; \
-		kubectl config --kubeconfig $$TGT unset users.admin@k3d-$(K3D_CLUSTER_NAME) 2>/dev/null || true; \
-		echo "已清理 $$TGT 中的 k3d 条目"; \
-	fi
+		kubectl config --kubeconfig $$f delete-context k3d-$(K3D_CLUSTER_NAME) 2>/dev/null || true; \
+		kubectl config --kubeconfig $$f delete-cluster k3d-$(K3D_CLUSTER_NAME) 2>/dev/null || true; \
+		kubectl config --kubeconfig $$f unset users.admin@k3d-$(K3D_CLUSTER_NAME) 2>/dev/null || true; \
+		echo "已清理 $$f 中的 k3d 条目"; \
+	}; \
+	cleanup_kubeconfig "$(KUBECONFIG_OUT)"; \
+	cleanup_kubeconfig "/etc/rancher/k3s/k3s.yaml";
 
 # ── 兼容旧名 ──
 create-kind-cluster: create-k3d-cluster
