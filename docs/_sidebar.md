@@ -12,6 +12,7 @@
   * [Harness 四种 adapter](02-agents/02-harness.md)
   * [AgentTemplate 定义](02-agents/03-agent-template.md)
   * [ModelConfig 配置](02-agents/04-model-config.md)
+  * [k8s-agent 完整案例](02-agents/05-k8s-agent-example.md)
 
 * Skills
   * [工具链安装](03-skills/00-toolchain.md)
