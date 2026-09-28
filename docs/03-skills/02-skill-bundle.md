@@ -2,6 +2,8 @@
 
 > Package skills as OCI and reference them from AgentTemplate.
 
+> **前置依赖**：`oras`、`skills-ref`、`jq`，安装方法见 [00-toolchain.md](00-toolchain.md)。
+
 ---
 
 ## 核心命令 Core commands
@@ -14,7 +16,10 @@ npx skills-ref validate ./skills/k8s-knowledge
 #    （用任意 OCI 工具，示例用 oras 或 flux operator）
 oras push ghcr.io/my-org/k8s-skills:v0.1.0 ./skills
 
-# 3. 在 AgentTemplate 中引用 digest
+# 3. 获取 digest
+oras manifest fetch ghcr.io/my-org/k8s-skills:v0.1.0 | jq -r '.digest'
+
+# 4. 在 AgentTemplate 中引用 digest
 kubectl apply -f agenttemplate.yaml
 ```
 

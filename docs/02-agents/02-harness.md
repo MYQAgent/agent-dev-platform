@@ -105,8 +105,9 @@ spec:
 ### 区分概念：Skill OCI 制品 ≠ 容器镜像
 
 ```
-Skill 打包：       oras push ghcr.io/my-org/k8s-skills:0.1.0 ./skills
+Skill OCI 制品：   oras push ghcr.io/my-org/k8s-skills:0.1.0 ./skills
                   → 这是发布 skill 内容（SKILL.md + scripts）
+                  → 工具链：oras / skills-ref / jq，安装见 03-skills/00-toolchain.md
 容器镜像：         docker build -t my-agent . && docker push
                   → 这是构建运行时环境（仅 byo 需要）
 ```

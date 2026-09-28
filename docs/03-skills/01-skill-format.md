@@ -109,5 +109,6 @@ spec:
 
 ## 下一步 Next
 
+- 工具链安装（oras / skills-ref / jq）→ [00-toolchain.md](00-toolchain.md)
 - 打包为 OCI 并引用 → [02-skill-bundle.md](02-skill-bundle.md)
 - 测试与 evals → [04-testing.md](04-testing.md)

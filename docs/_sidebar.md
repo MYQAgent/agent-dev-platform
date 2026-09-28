@@ -14,6 +14,7 @@
   * [ModelConfig 配置](02-agents/04-model-config.md)
 
 * Skills
+  * [工具链安装](03-skills/00-toolchain.md)
   * [Agent Plugins 格式](03-skills/01-skill-format.md)
   * [打包 OCI 并引用](03-skills/02-skill-bundle.md)
   * [MCP 集成](03-skills/03-mcp-integration.md)
