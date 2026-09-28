@@ -4,6 +4,7 @@ metadata:
   name: k8s-mcp
   namespace: kagent
 spec:
-  # 默认指向 kagent Helm 自动部署的 tools server
-  # 如需自定义 MCP 服务，修改为你的服务地址
+  description: kagent-tools MCP server for kubectl, helm, istio, etc.
+  # 默认指向 kagent Helm 自动部署的 kagent-tools 服务
+  # 执行 make helm-install 后自动创建
   url: http://kagent-tool-server.kagent.svc:8084/mcp
